@@ -1,0 +1,26 @@
+{
+  "name": "agency-os",
+  "version": "0.1.0",
+  "description": "Freelance OS - Ferramenta local para automatizar análises de websites",
+  "main": "dist/cli/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/cli/index.ts",
+    "dev": "tsx src/cli/index.ts",
+    "crawl": "tsx src/cli/index.ts",
+    "safe-crawl": "tsx scripts/run.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^4.1.9",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.9"
+  }
+}

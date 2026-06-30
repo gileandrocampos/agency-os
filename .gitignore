@@ -1,0 +1,38 @@
+# Dependências
+node_modules/
+
+# Build TypeScript
+dist/
+
+# Saída do crawler (dados gerados localmente)
+output/
+
+# Logs
+logs/
+*.log
+
+# Cobertura de testes
+coverage/
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# Playwright
+playwright-report/
+test-results/
+
+# Editores
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Cache
+.cache/
+*.tsbuildinfo
