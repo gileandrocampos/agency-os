@@ -21,7 +21,6 @@
 ## Próximas versões (planejado)
 
 ### v0.2.0 Parser
-- [ ]
 - [ ] Gerar site.json
 - [ ] Extrair textos
 - [ ] Contatos
@@ -40,7 +39,7 @@
 - [ ] briefing.md
 - [ ] wireframe.md
 - [ ] design-system.md
-- [ ] prompt.md 
+- [ ] prompt.md
 
 ### v0.5.0 — Interface
 - [ ] Dashboard com histórico
@@ -49,6 +48,6 @@
 - [ ] Download do pacote completo
 
 ### v1.0.0 - Assistente de Freelas
-= [ ] Pipeline completa com um clique
+- [ ] Pipeline completa com um clique
 - [ ] Templates de propostas comerciais
 - [ ] Comparação Antes x Depois

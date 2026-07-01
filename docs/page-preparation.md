@@ -321,8 +321,6 @@ Retorna o seletor que foi clicado com sucesso, ou `null` se nenhum for encontrad
 | `WaitFontsTask`         | ✅ Implementado |
 | `WaitImagesTask`        | ✅ Implementado |
 | `clickFirstMatch`       | ✅ Implementado |
-| `WaitFontsTask`         | ✅ Implementado                 |
-| `WaitImagesTask`        | ✅ Implementado                 |
 | Tipos (`preparation.ts`)| ✅ Implementado                 |
 
-Os steps da pipeline têm estrutura, contratos e configuração definidos, mas os corpos dos métodos `run()` ainda lançam `Error('Not implemented')`. As tasks internas (`WaitDomTask`, `WaitFontsTask`, `WaitImagesTask`) estão completamente implementadas e prontas para uso pelos steps.
+Os steps da pipeline e as tasks internas estão implementados e em uso no fluxo de preparação.

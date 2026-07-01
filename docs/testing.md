@@ -211,6 +211,7 @@ const service = new PagePreparationService(DEFAULT_PREPARATION_CONFIG, [step]);
 
 ---
 
+## 7. Padrões de assert
 
 
 Preferir asserts específicos em vez de genéricos:
