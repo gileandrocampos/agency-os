@@ -169,9 +169,50 @@ Cada nova feature deve cobrir os seguintes cenários:
 | Com URL válida → chama a ação correta | mock do orquestrador |
 | Erro na ação → `logError` + `process.exit(1)` | mock de rejeição + verificação dos dois |
 
+### 6.5 Steps e Tasks de preparação (page-preparer)
+
+| Categoria | Exemplos de casos |
+|---|---|
+| `page.evaluate` chamado uma vez | `toHaveBeenCalledOnce()` |
+| Opções corretas passadas para `evaluate` | `toHaveBeenCalledWith(expect.any(Function), options)` |
+| Resolve sem retorno em happy path | `resolves.toBeUndefined()` |
+| Lança mensagem prefixada em erro | `rejects.toThrow('NomeTask failed: ...')` |
+| `PreparationStepResult` correto em sucesso | `toMatchObject({ executed: true, success: true })` |
+| `PreparationStepResult` correto em falha | `toMatchObject({ executed: true, success: false })` |
+
+Para steps que dependem de `clickFirstMatch`, mockar o módulo `click-first-match` inteiro:
+
+```ts
+vi.mock('../../../crawler/page-preparer/click-first-match', () => ({
+  clickFirstMatch: vi.fn().mockResolvedValue(null),
+}));
+```
+
+---
+
+### 6.6 `PagePreparationService` (orquestrador da pipeline)
+
+Mockar os quatro steps como constructors com `vi.mock()`. Usar `function () {}` (não arrow) nos `mockImplementation` para evitar problemas de contexto:
+
+```ts
+vi.mock('../../../crawler/page-preparer/idle-waiter', () => ({
+  IdleWaiter: vi.fn().mockImplementation(function () {
+    return { name: 'idle-waiter', run: vi.fn() };
+  }),
+}));
+```
+
+Para injetar steps controláveis em `prepare()`, usar o segundo parâmetro do construtor:
+
+```ts
+const step = makeStepMock('meu-step', /* success = */ true);
+const service = new PagePreparationService(DEFAULT_PREPARATION_CONFIG, [step]);
+```
+
 ---
 
 ## 7. Padrões de assert
+
 
 Preferir asserts específicos em vez de genéricos:
 
