@@ -38,26 +38,30 @@ export class WaitDomTask {
         let settled = false;
         let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
-        const resolveOnce = () => {
-          if (settled) return;
-          settled = true;
-          observer.disconnect();
-          clearTimeout(safetyTimer);
-          clearTimeout(idleTimer);
-          resolve();
+        // Object method shorthand avoids __name() injection by esbuild (tsx uses keepNames: true).
+        // Arrow const assignments like `const fn = () => {}` get wrapped with __name(fn, "fn"),
+        // which is a module-level helper not available in the browser context of page.evaluate.
+        const handlers = {
+          resolveOnce() {
+            if (settled) return;
+            settled = true;
+            observer.disconnect();
+            clearTimeout(safetyTimer);
+            clearTimeout(idleTimer);
+            resolve();
+          },
+          // Replaces the pending idle timer with a fresh one on each DOM mutation.
+          scheduleIdle() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => handlers.resolveOnce(), idleMs);
+          },
         };
 
-        // Replaces the pending idle timer with a fresh one on each DOM mutation.
-        const scheduleIdle = () => {
-          clearTimeout(idleTimer);
-          idleTimer = setTimeout(resolveOnce, idleMs);
-        };
-
-        const observer = new MutationObserver(scheduleIdle);
+        const observer = new MutationObserver(() => handlers.scheduleIdle());
         observer.observe(document.body, { subtree: true, childList: true, attributes: true });
 
-        const safetyTimer = setTimeout(resolveOnce, timeoutMs);
-        scheduleIdle();
+        const safetyTimer = setTimeout(() => handlers.resolveOnce(), timeoutMs);
+        handlers.scheduleIdle();
       });
     }, this.options);
   }

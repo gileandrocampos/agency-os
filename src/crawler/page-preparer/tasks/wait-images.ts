@@ -26,21 +26,26 @@ export class WaitImagesTask {
     await page.evaluate(({ timeoutMs }) => {
       const images = Array.from(document.querySelectorAll<HTMLImageElement>('img[src]'));
 
-      const waitForImage = (img: HTMLImageElement): Promise<void> => {
-        // Already decoded and rendered — nothing to wait for.
-        if (img.complete) return Promise.resolve();
+      // Object method shorthand avoids __name() injection by esbuild (tsx uses keepNames: true).
+      // Arrow const assignments like `const fn = () => {}` get wrapped with __name(fn, "fn"),
+      // which is a module-level helper not available in the browser context of page.evaluate.
+      const loader = {
+        waitForImage(img: HTMLImageElement): Promise<void> {
+          // Already decoded and rendered — nothing to wait for.
+          if (img.complete) return Promise.resolve();
 
-        // Resolve on both load and error: a broken image is still a settled image.
-        // Both events share the same handler to eliminate symmetric duplication.
-        return new Promise<void>((resolve) => {
-          const settle = () => { resolve(); };
-          img.addEventListener('load', settle, { once: true });
-          img.addEventListener('error', settle, { once: true });
-        });
+          // Resolve on both load and error: a broken image is still a settled image.
+          return new Promise<void>((resolve) => {
+            img.addEventListener('load', () => resolve(), { once: true });
+            img.addEventListener('error', () => resolve(), { once: true });
+          });
+        },
       };
 
       // Typed as Promise<void[]> then cast via the outer Promise.race — no .then() cast needed.
-      const allLoaded: Promise<void> = Promise.all(images.map(waitForImage)) as Promise<void>;
+      const allLoaded: Promise<void> = Promise.all(
+        images.map((img) => loader.waitForImage(img)),
+      ) as Promise<void>;
       const safeTimeout = new Promise<void>((resolve) => setTimeout(resolve, timeoutMs));
 
       return Promise.race([allLoaded, safeTimeout]);
