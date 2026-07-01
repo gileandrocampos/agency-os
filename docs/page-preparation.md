@@ -288,16 +288,39 @@ const DEFAULT_PREPARATION_CONFIG: PreparationConfig = {
 
 ---
 
+## Utilitário: `clickFirstMatch`
+
+Arquivo: `src/crawler/page-preparer/click-first-match.ts`
+
+Função compartilhada usada por `CookieHandler` e `OverlayHandler`. Itera sobre uma lista de seletores CSS e tenta clicar no primeiro que for encontrado na página.
+
+**Assinatura:**
+
+```typescript
+clickFirstMatch(
+  page: Page,
+  selectors: readonly string[],
+  timeoutMs = SELECTOR_CLICK_TIMEOUT_MS, // padrão: 2000ms
+): Promise<string | null>
+```
+
+Retorna o seletor que foi clicado com sucesso, ou `null` se nenhum for encontrado. Falhas individuais de seletor são silenciadas — a função tenta o próximo da lista.
+
+---
+
 ## Status de implementação
 
-| Componente              | Status            |
-|-------------------------|-------------------|
-| `PagePreparationService`| ⚠️ `prepare()` não implementado |
-| `IdleWaiter`            | ⚠️ `run()` não implementado     |
-| `CookieHandler`         | ⚠️ `run()` não implementado     |
-| `OverlayHandler`        | ⚠️ `run()` não implementado     |
-| `ScrollActivator`       | ⚠️ `run()` não implementado     |
-| `WaitDomTask`           | ✅ Implementado                 |
+| Componente              | Status       |
+|-------------------------|--------------|
+| `PagePreparationService`| ✅ Implementado |
+| `IdleWaiter`            | ✅ Implementado |
+| `CookieHandler`         | ✅ Implementado |
+| `OverlayHandler`        | ✅ Implementado |
+| `ScrollActivator`       | ✅ Implementado |
+| `WaitDomTask`           | ✅ Implementado |
+| `WaitFontsTask`         | ✅ Implementado |
+| `WaitImagesTask`        | ✅ Implementado |
+| `clickFirstMatch`       | ✅ Implementado |
 | `WaitFontsTask`         | ✅ Implementado                 |
 | `WaitImagesTask`        | ✅ Implementado                 |
 | Tipos (`preparation.ts`)| ✅ Implementado                 |
