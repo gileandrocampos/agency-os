@@ -145,6 +145,12 @@ describe('parseSite', () => {
       const result = parseSite(html);
       expect(result.links).toEqual([{ href: '/ok', text: 'Com href' }]);
     });
+
+    it('ignora âncoras com href vazio ou só com espaços', () => {
+      const html = `<html><body><a href="">Vazio</a><a href="   ">Espaços</a><a href="/ok">Com href</a></body></html>`;
+      const result = parseSite(html);
+      expect(result.links).toEqual([{ href: '/ok', text: 'Com href' }]);
+    });
   });
 
   describe('imagens', () => {
@@ -165,6 +171,12 @@ describe('parseSite', () => {
       const html = `<html><body><img src="/img.png" /></body></html>`;
       const result = parseSite(html);
       expect(result.images).toEqual([{ src: '/img.png', alt: '' }]);
+    });
+
+    it('ignora imagens com src vazio ou só com espaços', () => {
+      const html = `<html><body><img src="" alt="Vazio" /><img src="   " alt="Espaços" /><img src="/img.png" alt="Ok" /></body></html>`;
+      const result = parseSite(html);
+      expect(result.images).toEqual([{ src: '/img.png', alt: 'Ok' }]);
     });
   });
 

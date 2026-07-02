@@ -2,6 +2,9 @@
   "name": "agency-os",
   "version": "0.1.0",
   "description": "Freelance OS - Ferramenta local para automatizar análises de websites",
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "main": "dist/cli/index.js",
   "scripts": {
     "build": "tsc",

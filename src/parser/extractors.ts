@@ -45,7 +45,7 @@ export function extractLinks($: CheerioAPI): Link[] {
   $('a[href]').each((_, el) => {
     const href = $(el).attr('href')?.trim() ?? '';
     const text = $(el).text().trim();
-    links.push({ href, text });
+    if (href) links.push({ href, text });
   });
 
   return links;
@@ -57,7 +57,7 @@ export function extractImages($: CheerioAPI): Image[] {
   $('img').each((_, el) => {
     const src = $(el).attr('src')?.trim() ?? '';
     const alt = $(el).attr('alt')?.trim() ?? '';
-    images.push({ src, alt });
+    if (src) images.push({ src, alt });
   });
 
   return images;

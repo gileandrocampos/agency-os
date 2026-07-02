@@ -1,4 +1,4 @@
-import type { ParsedSite } from '../parser/types';
+import type { ParsedSite } from '../parser';
 
 export type { ParsedSite };
 

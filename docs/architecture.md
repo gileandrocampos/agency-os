@@ -42,7 +42,9 @@ Logs (logs/execution.log)
 | **PageLoader**    | `src/crawler/page-loader.ts`       | Navega para a URL e aguarda `networkidle`                         |
 | **PagePreparer**  | `src/crawler/page-preparer/`       | Pipeline de preparação da página antes da captura                 |
 | **Screenshot**    | `src/crawler/screenshot.ts`        | Captura screenshot fullpage por viewport                          |
-| **HtmlSaver**     | `src/crawler/html-saver.ts`        | Salva o HTML renderizado em disco                                 || **Parser**       | `src/parser/index.ts`              | Extrai dados estruturados do HTML renderizado (título, headings, links, etc.) || **FileSystem**    | `src/filesystem/index.ts`          | Cria diretórios e constrói caminhos de sessão                     |
+| **HtmlSaver**     | `src/crawler/html-saver.ts`        | Salva o HTML renderizado em disco                                 |
+| **Parser**        | `src/parser/index.ts`              | Extrai dados estruturados do HTML renderizado (título, headings, links, etc.) |
+| **FileSystem**    | `src/filesystem/index.ts`          | Cria diretórios e constrói caminhos de sessão                     |
 | **Logger**        | `src/logger/index.ts`              | Logs prefixados com timestamp no console e em arquivo             |
 | **Utils**         | `src/utils/`                       | Funções puras: validação de URL, extração de domínio, timestamp   |
 | **Types**         | `src/types/`                       | Interfaces e constantes compartilhadas entre camadas              |

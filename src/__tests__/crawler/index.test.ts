@@ -104,6 +104,12 @@ describe('runCrawler', () => {
   it('chama saveHtml uma vez', async () => {
     await runCrawler('https://example.com');
     expect(saveHtml).toHaveBeenCalledOnce();
+    expect(saveHtml).toHaveBeenCalledWith('<html></html>', '/output/example.com_2026-01-01');
+  });
+
+  it('obtém o HTML da página apenas uma vez', async () => {
+    await runCrawler('https://example.com');
+    expect(mockPage.content).toHaveBeenCalledOnce();
   });
 
   it('chama session.close() ao final (finally)', async () => {

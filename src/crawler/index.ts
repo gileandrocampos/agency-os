@@ -60,10 +60,11 @@ async function executeCrawl(
     logScreenshot('Capturando Mobile');
     const mobilePath = await captureScreenshot(session.page, MOBILE_VIEWPORT, config.outputDir);
 
-    logSave('Salvando HTML');
-    const htmlPath = await saveHtml(session.page, config.outputDir);
-
     const html = await session.page.content();
+
+    logSave('Salvando HTML');
+    const htmlPath = await saveHtml(html, config.outputDir);
+
     const parsedSite = parseSite(html);
 
     return {
