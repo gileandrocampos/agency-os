@@ -6,11 +6,20 @@ import { saveHtml } from '../../crawler/html-saver';
 import { ensureDir } from '../../filesystem';
 import { runCrawler } from '../../crawler/index';
 
-const { mockClose, mockPage, mockSession } = vi.hoisted(() => {
+const { mockClose, mockPage, mockSession, mockParsedSite } = vi.hoisted(() => {
   const mockClose = vi.fn().mockResolvedValue(undefined);
-  const mockPage = {};
+  const mockPage = { content: vi.fn().mockResolvedValue('<html></html>') };
   const mockSession = { page: mockPage, close: mockClose };
-  return { mockClose, mockPage, mockSession };
+  const mockParsedSite = {
+    title: 'Test',
+    description: null,
+    language: null,
+    headings: [],
+    paragraphs: [],
+    links: [],
+    images: [],
+  };
+  return { mockClose, mockPage, mockSession, mockParsedSite };
 });
 
 vi.mock('../../crawler/browser', () => ({
@@ -30,6 +39,10 @@ vi.mock('../../crawler/screenshot', () => ({
 
 vi.mock('../../crawler/html-saver', () => ({
   saveHtml: vi.fn().mockResolvedValue('/out/page.html'),
+}));
+
+vi.mock('../../parser', () => ({
+  parseSite: vi.fn().mockReturnValue(mockParsedSite),
 }));
 
 vi.mock('../../logger', () => ({
@@ -69,6 +82,7 @@ describe('runCrawler', () => {
       screenshotDesktop: '/out/screenshot-desktop.png',
       screenshotMobile: '/out/screenshot-mobile.png',
       htmlFile: '/out/page.html',
+      parsedSite: mockParsedSite,
     });
   });
 
@@ -90,6 +104,12 @@ describe('runCrawler', () => {
   it('chama saveHtml uma vez', async () => {
     await runCrawler('https://example.com');
     expect(saveHtml).toHaveBeenCalledOnce();
+    expect(saveHtml).toHaveBeenCalledWith('<html></html>', '/output/example.com_2026-01-01');
+  });
+
+  it('obtém o HTML da página apenas uma vez', async () => {
+    await runCrawler('https://example.com');
+    expect(mockPage.content).toHaveBeenCalledOnce();
   });
 
   it('chama session.close() ao final (finally)', async () => {

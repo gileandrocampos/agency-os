@@ -22,6 +22,7 @@
 
 ### v0.2.0 Parser
 - [ ] Gerar site.json
+- [x] SiteParser: extração de title, description, language, headings, paragraphs, links e images (cheerio)
 - [ ] Extrair textos
 - [ ] Contatos
 - [ ] Menu
