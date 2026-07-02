@@ -1,3 +1,7 @@
+import type { ParsedSite } from '../parser/types';
+
+export type { ParsedSite };
+
 export interface CrawlerConfig {
   url: string;
   domain: string;
@@ -12,6 +16,7 @@ export interface CrawlerResult {
   screenshotDesktop: string;
   screenshotMobile: string;
   htmlFile: string;
+  parsedSite: ParsedSite;
 }
 
 export interface ViewportConfig {

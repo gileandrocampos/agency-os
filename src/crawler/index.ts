@@ -21,6 +21,7 @@ import { loadPage } from './page-loader';
 import { captureScreenshot } from './screenshot';
 import { saveHtml } from './html-saver';
 import { PagePreparationService } from './page-preparer';
+import { parseSite } from '../parser';
 
 function buildConfig(rawUrl: string): CrawlerConfig {
   const url = validateUrl(rawUrl);
@@ -62,12 +63,16 @@ async function executeCrawl(
     logSave('Salvando HTML');
     const htmlPath = await saveHtml(session.page, config.outputDir);
 
+    const html = await session.page.content();
+    const parsedSite = parseSite(html);
+
     return {
       url: config.url,
       outputDir: config.outputDir,
       screenshotDesktop: desktopPath,
       screenshotMobile: mobilePath,
       htmlFile: htmlPath,
+      parsedSite,
     };
   } finally {
     await session.close();
