@@ -22,3 +22,32 @@ export interface ParsedSite {
   links: Link[];
   images: Image[];
 }
+
+export interface OpenGraphMetadata {
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  url: string | null;
+  type: string | null;
+  siteName: string | null;
+}
+
+export interface TwitterCardMetadata {
+  card: string | null;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+}
+
+export interface SiteMetadata {
+  title: string | null;
+  description: string | null;
+  keywords: string | null;
+  author: string | null;
+  viewport: string | null;
+  charset: string | null;
+  robots: string | null;
+  canonical: string | null;
+  openGraph: OpenGraphMetadata;
+  twitterCard: TwitterCardMetadata;
+}

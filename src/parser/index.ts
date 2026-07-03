@@ -1,2 +1,3 @@
 export { parseSite } from './site-parser';
-export type { ParsedSite, Heading, Link, Image } from './types';
+export { extractMetadata } from './metadata-extractor';
+export type { ParsedSite, Heading, Link, Image, SiteMetadata, OpenGraphMetadata, TwitterCardMetadata } from './types';
