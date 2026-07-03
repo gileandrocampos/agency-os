@@ -13,13 +13,21 @@ const FULL_HTML = `
     <meta name="description" content="Descrição do site" />
   </head>
   <body>
+    <header>
+      <nav>
+        <a href="/">Home</a>
+      </nav>
+    </header>
     <h1>Título Principal</h1>
     <h2>Subtítulo</h2>
     <h3>Seção</h3>
     <p>Primeiro parágrafo.</p>
     <p>Segundo parágrafo.</p>
-    <a href="https://example.com">Link externo</a>
+    <a href="https://outside.com">Link externo</a>
     <a href="/sobre">Sobre</a>
+    <footer>
+      <a href="/contato">Contato</a>
+    </footer>
     <img src="/logo.png" alt="Logo" />
     <img src="/banner.jpg" alt="" />
   </body>
@@ -130,8 +138,10 @@ describe('parseSite', () => {
     it('extrai href e texto de todos os links com atributo href', () => {
       const result = parseSite(FULL_HTML);
       expect(result.links).toEqual([
-        { href: 'https://example.com', text: 'Link externo' },
+        { href: '/', text: 'Home' },
+        { href: 'https://outside.com', text: 'Link externo' },
         { href: '/sobre', text: 'Sobre' },
+        { href: '/contato', text: 'Contato' },
       ]);
     });
 
@@ -177,6 +187,31 @@ describe('parseSite', () => {
       const html = `<html><body><img src="" alt="Vazio" /><img src="   " alt="Espaços" /><img src="/img.png" alt="Ok" /></body></html>`;
       const result = parseSite(html);
       expect(result.images).toEqual([{ src: '/img.png', alt: 'Ok' }]);
+    });
+  });
+
+  describe('navigation', () => {
+    it('extrai menu principal e footer', () => {
+      const result = parseSite(FULL_HTML, 'https://example.com');
+
+      expect(result.navigation.mainMenu).toEqual([{ href: '/', text: 'Home' }]);
+      expect(result.navigation.footerMenu).toEqual([{ href: '/contato', text: 'Contato' }]);
+    });
+
+    it('classifica links internos e externos com base na URL informada', () => {
+      const result = parseSite(FULL_HTML, 'https://example.com');
+
+      expect(result.navigation.internalLinks).toContainEqual({ href: '/sobre', text: 'Sobre' });
+      expect(result.navigation.internalLinks).toContainEqual({ href: '/contato', text: 'Contato' });
+      expect(result.navigation.externalLinks).toContainEqual({ href: 'https://outside.com', text: 'Link externo' });
+    });
+
+    it('retorna estrutura serializável no resultado final', () => {
+      const result = parseSite(FULL_HTML, 'https://example.com');
+      const serialized = JSON.stringify(result.navigation);
+
+      expect(typeof serialized).toBe('string');
+      expect(JSON.parse(serialized)).toMatchObject(result.navigation);
     });
   });
 

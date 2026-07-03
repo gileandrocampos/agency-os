@@ -17,6 +17,12 @@ const { mockClose, mockPage, mockSession, mockParsedSite } = vi.hoisted(() => {
     headings: [],
     paragraphs: [],
     links: [],
+    navigation: {
+      mainMenu: [],
+      footerMenu: [],
+      internalLinks: [],
+      externalLinks: [],
+    },
     images: [],
   };
   return { mockClose, mockPage, mockSession, mockParsedSite };

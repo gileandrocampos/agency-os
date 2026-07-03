@@ -15,22 +15,25 @@ src/parser/
   index.ts              ← interface pública (exports)
   site-parser.ts        ← função parseSite
   extractors.ts         ← funções puras de extração por campo (título, descrição, idioma, headings, etc.)
+  navigation-extractor/
+    index.ts            ← interface pública do módulo
+    navigation-extractor.ts ← extração de menu principal, footer e classificação de links
   metadata-extractor.ts ← função extractMetadata (metadados do <head>)
-  types.ts              ← interfaces ParsedSite, SiteMetadata, Heading, Link, Image, OpenGraphMetadata, TwitterCardMetadata
+  types.ts              ← interfaces ParsedSite, SiteMetadata, Heading, Link, NavigationData, Image, OpenGraphMetadata, TwitterCardMetadata
 ```
 
 ---
 
 ## Interface pública
 
-### `parseSite(html: string): ParsedSite`
+### `parseSite(html: string, baseUrl?: string): ParsedSite`
 
-Recebe uma string HTML renderizada e retorna um `ParsedSite`.
+Recebe uma string HTML renderizada e retorna um `ParsedSite`. Quando `baseUrl` é informado, também classifica links como internos ou externos.
 
 ```ts
 import { parseSite } from './parser';
 
-const result = parseSite(html);
+const result = parseSite(html, 'https://example.com');
 // result.title, result.description, result.headings, etc.
 ```
 
@@ -57,6 +60,7 @@ interface ParsedSite {
   headings: Heading[];          // todos os h1–h6 na ordem do documento
   paragraphs: string[];         // texto de cada <p> não vazio
   links: Link[];                // todos os <a href="...">
+  navigation: NavigationData;   // links de navegação (menu/footer/internos/externos)
   images: Image[];              // todos os <img>
 }
 
@@ -68,6 +72,13 @@ interface Heading {
 interface Link {
   href: string;
   text: string;
+}
+
+interface NavigationData {
+  mainMenu: Link[];
+  footerMenu: Link[];
+  internalLinks: Link[];
+  externalLinks: Link[];
 }
 
 interface Image {
@@ -124,6 +135,7 @@ interface TwitterCardMetadata {
 ```
 src/__tests__/parser/site-parser.test.ts
 src/__tests__/parser/metadata-extractor.test.ts
+src/__tests__/parser/navigation-extractor/navigation-extractor.test.ts
 ```
 
 Cobertura: happy path + casos de borda por campo + erro de parsing.

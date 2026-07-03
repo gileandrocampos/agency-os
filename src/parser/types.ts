@@ -8,6 +8,13 @@ export interface Link {
   text: string;
 }
 
+export interface NavigationData {
+  mainMenu: Link[];
+  footerMenu: Link[];
+  internalLinks: Link[];
+  externalLinks: Link[];
+}
+
 export interface Image {
   src: string;
   alt: string;
@@ -20,6 +27,7 @@ export interface ParsedSite {
   headings: Heading[];
   paragraphs: string[];
   links: Link[];
+  navigation: NavigationData;
   images: Image[];
 }
 

@@ -65,7 +65,7 @@ async function executeCrawl(
     logSave('Salvando HTML');
     const htmlPath = await saveHtml(html, config.outputDir);
 
-    const parsedSite = parseSite(html);
+    const parsedSite = parseSite(html, config.url);
 
     return {
       url: config.url,
