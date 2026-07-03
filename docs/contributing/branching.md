@@ -1,12 +1,16 @@
 # Instruções de Branching — Agency OS
 
-> Estas regras devem ser seguidas SEMPRE que uma branch, commit ou PR for criado, sugerido ou mencionado neste projeto. Não faça suposições diferentes das descritas aqui.
+> Estas regras devem ser seguidas SEMPRE que uma branch, commit ou PR for necessário neste projeto. Não faça suposições diferentes das descritas aqui.
 
 ## Contexto
 
-Este arquivo define a convenção oficial de nomenclatura de branches do projeto **Agency OS**. Use-o como referência obrigatória ao:
-- Sugerir o nome de uma nova branch
-- Criar uma branch via terminal/comando
+Este arquivo define a convenção oficial de nomenclatura de branches do projeto **Agency OS** e a ação obrigatória que deve ser tomada a partir dela.
+
+**Importante: este documento não é apenas um guia de nomenclatura para consulta ou sugestão. Ele é uma instrução de execução.** Sempre que uma nova feature, correção, refatoração, tarefa de documentação, teste, chore, melhoria de performance, experimento ou hotfix for iniciada neste projeto, o Copilot deve **criar a branch automaticamente**, executando o comando git correspondente — sem esperar que o usuário peça explicitamente "crie uma branch" a cada vez. A leitura deste arquivo já é o gatilho para a ação.
+
+Use-o como referência obrigatória para:
+- **Criar** a branch (ação real, via comando git), não apenas sugerir o nome
+- Nomear a branch seguindo o padrão definido abaixo
 - Revisar se uma branch existente segue o padrão
 - Gerar mensagens de commit ou descrições de PR relacionadas ao tipo da branch
 
@@ -31,6 +35,8 @@ Este arquivo define a convenção oficial de nomenclatura de branches do projeto
 - Não usar maiúsculas, `_`, espaços, acentos ou caracteres especiais no nome da branch.
 - Se a mudança estiver ligada a uma issue/ticket, incluir o número ao final: `feat/seo-analyzer-123`.
 
+**Ação obrigatória:** definido o nome, o Copilot deve criar a branch de fato (`git checkout -b <tipo>/<descricao>`), não apenas informar qual seria o nome ideal.
+
 ---
 
 ## 3. Tabela de tipos
@@ -47,7 +53,7 @@ Este arquivo define a convenção oficial de nomenclatura de branches do projeto
 | `spike`    | Experimentação/prova de conceito                             | `spike/new-parser-lib`, `spike/ai-classifier`                   |
 | `hotfix`   | Correção urgente relacionada diretamente à produção           | `hotfix/prod-crash-login`                                       |
 
-Regra de decisão: se a mudança introduz comportamento novo → `feat`. Se corrige um comportamento quebrado → `fix`. Se muda apenas estrutura interna do código → `refactor`. Na dúvida entre dois tipos, pergunte ao usuário antes de decidir.
+Regra de decisão: se a mudança introduz comportamento novo → `feat`. Se corrige um comportamento quebrado → `fix`. Se muda apenas estrutura interna do código → `refactor`. Na dúvida entre dois tipos, pergunte ao usuário antes de decidir (mas isso não deve ser usado como desculpa para não criar a branch quando o tipo for óbvio).
 
 ---
 
@@ -95,8 +101,11 @@ Regra de decisão: se a mudança introduz comportamento novo → `feat`. Se corr
 
 ## 6. Como o Copilot deve se comportar
 
-- Ao sugerir a criação de uma branch, **sempre** seguir o padrão `<tipo>/<descricao-kebab-case>` desta tabela.
+- **Ao identificar que uma nova alteração (feature, correção, refatoração, teste, doc, chore, perf, spike ou hotfix) está prestes a começar, o Copilot deve CRIAR a branch imediatamente e de forma autônoma**, executando o comando git (`git checkout -b <tipo>/<descricao>`) — não deve se limitar a sugerir ou descrever o nome que a branch teria.
+- Isso vale mesmo que o usuário não peça explicitamente "crie uma branch": a leitura deste documento já é a autorização e o gatilho para agir.
+- Antes de criar a branch, sempre atualizar a `main` local (`git pull origin main`), conforme item 5.1.
 - Ao gerar comandos git, usar o formato completo, ex: `git checkout -b feat/seo-analyzer`.
-- Se o usuário pedir uma branch sem especificar o tipo, perguntar ou inferir o tipo mais provável com base na descrição da tarefa, e explicar a escolha em uma linha.
+- Se o usuário pedir uma branch sem especificar o tipo, inferir o tipo mais provável com base na descrição da tarefa, criar a branch, e explicar a escolha em uma linha (só perguntar antes de criar se houver ambiguidade real entre dois tipos igualmente plausíveis).
 - Nunca sugerir nomes de branch em inglês misturado com português de forma inconsistente — manter a descrição no mesmo idioma da tarefa.
-- Nunca sugerir merge de branch `spike/*` sem mencionar que precisa de revisão humana antes.
+- Nunca criar ou sugerir merge de branch `spike/*` para `main` sem mencionar que precisa de revisão humana antes.
+- Nunca criar ou fazer commit diretamente na `main`.
