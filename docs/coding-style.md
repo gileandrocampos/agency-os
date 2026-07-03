@@ -32,6 +32,7 @@ src/
 
 - Funções livres (não métodos) para operações stateless.
 - Classes apenas quando há estado encapsulado ou contrato via interface (ex: `PreparationStep`).
+- **Máximo de 40 linhas por função.** Funções maiores devem ser decompostas.
 - Sem comentários óbvios — o código deve ser autoexplicativo.
 - Parâmetros obrigatórios antes dos opcionais. Opcionais com `?` ou valor default.
 

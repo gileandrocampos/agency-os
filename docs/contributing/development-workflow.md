@@ -82,6 +82,8 @@ Excluir Branch
   - Documentação de arquitetura
   - Comentários/JSDoc de funções públicas alteradas
   - Guias de uso (ex: `docs/*`)
+  - `CHANGELOG.md` — registrar a mudança na seção da versão em progresso
+  - `docs/roadmap.md` — marcar itens concluídos ou adicionar novos planejados (quando necessário)
 - Se a mudança não impacta documentação, o Copilot deve declarar isso explicitamente ("nenhuma documentação precisa ser atualizada"), em vez de simplesmente pular a etapa sem mencionar.
 
 ---

@@ -6,7 +6,9 @@
 
 Este arquivo define a convenção oficial de nomenclatura de branches do projeto **Agency OS** e a ação obrigatória que deve ser tomada a partir dela.
 
-**Importante: este documento não é apenas um guia de nomenclatura para consulta ou sugestão. Ele é uma instrução de execução.** Sempre que uma nova feature, correção, refatoração, tarefa de documentação, teste, chore, melhoria de performance, experimento ou hotfix for iniciada neste projeto, o Copilot deve **criar a branch automaticamente**, executando o comando git correspondente — sem esperar que o usuário peça explicitamente "crie uma branch" a cada vez. A leitura deste arquivo já é o gatilho para a ação.
+**Importante: este documento não é apenas um guia de nomenclatura para consulta ou sugestão. Ele é uma instrução de execução.** Sempre que uma nova feature, correção, refatoração, tarefa de documentação, teste, chore, melhoria de performance, experimento ou hotfix for iniciada neste projeto, o Copilot deve **criar a branch automaticamente**, executando o comando git correspondente — sem esperar que o usuário peça explicitamente “crie uma branch” a cada vez.
+
+> **Quando criar:** após confirmar o objetivo e o escopo da tarefa (conforme passo 3 de `development-workflow.md`). Não criar a branch antes de entender o que será feito.
 
 Use-o como referência obrigatória para:
 - **Criar** a branch (ação real, via comando git), não apenas sugerir o nome
@@ -35,7 +37,7 @@ Use-o como referência obrigatória para:
 - Não usar maiúsculas, `_`, espaços, acentos ou caracteres especiais no nome da branch.
 - Se a mudança estiver ligada a uma issue/ticket, incluir o número ao final: `feat/seo-analyzer-123`.
 
-**Ação obrigatória:** definido o nome, o Copilot deve criar a branch de fato (`git checkout -b <tipo>/<descricao>`), não apenas informar qual seria o nome ideal.
+**Ação obrigatória:** definido o objetivo, o tipo e o nome, o Copilot deve criar a branch de fato (`git checkout -b <tipo>/<descricao>`), não apenas informar qual seria o nome ideal.
 
 ---
 

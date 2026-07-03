@@ -32,7 +32,7 @@ Logs de execução são gravados em `logs/execution.log`.
 
 ---
 
-## Funcionalidades atuais (v0.1.0)
+## Funcionalidades atuais (v0.1.0 + v0.2.0 parcial)
 
 - Captura de screenshot desktop (1280×720) e mobile (375×812)
 - Extração do HTML renderizado
@@ -40,6 +40,8 @@ Logs de execução são gravados em `logs/execution.log`.
 - Validação de URL na entrada da CLI
 - Logs com timestamps em arquivo e console
 - Execução segura com gate de testes (`safe-crawl`)
+- `SiteParser`: extração de title, description, language, headings, paragraphs, links e images (cheerio)
+- `MetadataExtractor`: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
 
 ---
 

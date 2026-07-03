@@ -7,6 +7,8 @@ Uma feature só pode ser considerada concluída quando atender TODOS os critéri
 - [ ] Código revisado
 - [ ] Testes unitários criados
 - [ ] Todos os testes passando
+- [ ] Cobertura de testes ≥ 90%
+- [ ] Safe-crawl executado com sucesso
 - [ ] Logs implementados
 - [ ] Tratamento de erros implementado
 - [ ] Documentação atualizada

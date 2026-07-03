@@ -1,4 +1,4 @@
-# Freelance OS
+# Agency OS
 
 > Ferramenta CLI local para automatizar análises de websites e acelerar a produção de sites modernos para pequenas empresas.
 
@@ -50,7 +50,7 @@ Os logs ficam em `logs/`.
 | Comando | Descrição |
 |---|---|
 | `npm run crawl <url>` | Executa o crawler |
-| `npm run safe-crawl <url>` | Executa com tratamento de erros no nível do processo |
+| `npm run safe-crawl <url>` | Roda os testes antes; aborta se algum falhar |
 | `npm test` | Roda os testes |
 | `npm run test:coverage` | Roda os testes com cobertura |
 | `npm run build` | Compila o TypeScript |
