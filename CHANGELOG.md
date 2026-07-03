@@ -11,6 +11,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ### Added
 - `SiteParser`: extração de title, description, language, headings, paragraphs, links e images via cheerio
 - `MetadataExtractor`: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
+- `Navigation Extractor`: extração de menu principal, links de footer e classificação de links internos/externos em formato serializável
 
 ---
 

@@ -10,8 +10,9 @@ import {
   extractLinks,
   extractImages,
 } from './extractors';
+import { extractNavigation } from './navigation-extractor';
 
-export function parseSite(html: string): ParsedSite {
+export function parseSite(html: string, baseUrl?: string): ParsedSite {
   logStart('Iniciando parsing do HTML...');
 
   try {
@@ -24,6 +25,7 @@ export function parseSite(html: string): ParsedSite {
       headings: extractHeadings($),
       paragraphs: extractParagraphs($),
       links: extractLinks($),
+      navigation: extractNavigation($, baseUrl),
       images: extractImages($),
     };
 

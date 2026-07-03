@@ -26,7 +26,7 @@
 - [x] MetadataExtractor: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
 - [ ] Extrair textos
 - [ ] Contatos
-- [ ] Menu
+- [x] Menu
 - [ ] Imagens
 - [ ] Cores
 - [ ] Fontes

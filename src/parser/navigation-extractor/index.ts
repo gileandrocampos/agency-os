@@ -1,0 +1,1 @@
+export { extractNavigation } from './navigation-extractor';
