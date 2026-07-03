@@ -9,7 +9,7 @@ function createLink(href: string, text: string): Link | null {
   const normalizedHref = href.trim();
   const normalizedText = text.trim();
 
-  if (!normalizedHref) {
+  if (!normalizedHref || isIgnoredLink(normalizedHref)) {
     return null;
   }
 
@@ -76,7 +76,7 @@ function getResolvedUrl(href: string, baseUrl?: string): URL | null {
 }
 
 function isLikelyRelative(href: string): boolean {
-  return href.startsWith('/') || href.startsWith('./') || href.startsWith('../');
+  return !href.includes('://') && !href.startsWith('//');
 }
 
 function classifyLink(link: Link, baseHostname: string | null, baseUrl?: string): 'internal' | 'external' | 'ignore' {

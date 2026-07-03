@@ -11,6 +11,8 @@ const HTML_WITH_NAVIGATION = `
         <a href="/">Home</a>
         <a href="/about">Sobre</a>
         <a href="https://blog.example.com">Blog</a>
+        <a href="#top">Topo</a>
+        <a href="mailto:nav@example.com">Email nav</a>
       </nav>
     </header>
 
@@ -24,6 +26,7 @@ const HTML_WITH_NAVIGATION = `
     <footer>
       <a href="/privacy">Privacidade</a>
       <a href="https://instagram.com/example">Instagram</a>
+      <a href="tel:+5511999999999">Telefone</a>
     </footer>
   </body>
 </html>
@@ -73,10 +76,23 @@ describe('extractNavigation', () => {
   });
 
   it('classifica links sem URL base usando heuristica absoluta/relativa', () => {
-    const $ = load('<html><body><a href="/interno">Interno</a><a href="https://externo.com">Externo</a></body></html>');
+    const $ = load(
+      '<html><body>' +
+        '<a href="/interno">Interno</a>' +
+        '<a href="https://externo.com">Externo</a>' +
+        '<a href="about">Sobre (relativo)</a>' +
+        '<a href="contact.html">Contato (relativo)</a>' +
+        '<a href="?q=1">Query (relativo)</a>' +
+        '</body></html>',
+    );
     const result = extractNavigation($);
 
-    expect(result.internalLinks).toEqual([{ href: '/interno', text: 'Interno' }]);
+    expect(result.internalLinks).toEqual([
+      { href: '/interno', text: 'Interno' },
+      { href: 'about', text: 'Sobre (relativo)' },
+      { href: 'contact.html', text: 'Contato (relativo)' },
+      { href: '?q=1', text: 'Query (relativo)' },
+    ]);
     expect(result.externalLinks).toEqual([{ href: 'https://externo.com', text: 'Externo' }]);
   });
 
