@@ -4,11 +4,11 @@ import { logStart, logSuccess, logError } from '../logger';
 import type { SiteMetadata, OpenGraphMetadata, TwitterCardMetadata } from './types';
 
 function extractMetaByName($: CheerioAPI, name: string): string | null {
-  return $(`meta[name="${name}"]`).attr('content')?.trim() ?? null;
+  return $(`head meta[name="${name}"]`).attr('content')?.trim() ?? null;
 }
 
 function extractMetaByProperty($: CheerioAPI, property: string): string | null {
-  return $(`meta[property="${property}"]`).attr('content')?.trim() ?? null;
+  return $(`head meta[property="${property}"]`).attr('content')?.trim() ?? null;
 }
 
 function extractTitle($: CheerioAPI): string | null {
@@ -18,8 +18,8 @@ function extractTitle($: CheerioAPI): string | null {
 
 function extractCharset($: CheerioAPI): string | null {
   const charset =
-    $('meta[charset]').attr('charset')?.trim() ??
-    $('meta[http-equiv="Content-Type"]').attr('content')?.match(/charset=([^\s;]+)/i)?.[1]?.trim();
+    $('head meta[charset]').attr('charset')?.trim() ??
+    $('head meta[http-equiv="Content-Type"]').attr('content')?.match(/charset=([^\s;]+)/i)?.[1]?.trim();
   return charset ?? null;
 }
 

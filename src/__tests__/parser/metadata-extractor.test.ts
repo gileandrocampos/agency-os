@@ -214,6 +214,29 @@ describe('extractMetadata', () => {
       const result = extractMetadata(htmlWithBodyTitle);
       expect(result.title).toBe('Título do Head');
     });
+
+    it('ignora metatags no <body>', () => {
+      const htmlWithBodyMeta = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta name="description" content="Descrição do Head" />
+            <meta property="og:title" content="OG do Head" />
+            <meta charset="UTF-8" />
+          </head>
+          <body>
+            <meta name="description" content="Descrição do Body (ignorar)" />
+            <meta property="og:title" content="OG do Body (ignorar)" />
+            <meta charset="ISO-8859-1" />
+          </body>
+        </html>
+      `;
+      const result = extractMetadata(htmlWithBodyMeta);
+
+      expect(result.description).toBe('Descrição do Head');
+      expect(result.openGraph.title).toBe('OG do Head');
+      expect(result.charset).toBe('UTF-8');
+    });
   });
 
   describe('logs', () => {
