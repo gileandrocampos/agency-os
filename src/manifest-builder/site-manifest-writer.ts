@@ -12,6 +12,10 @@ function ensureOutputDir(outputDir: string): string {
     throw new Error('O diretório de saída é obrigatório para salvar o site.json.');
   }
 
+  if (!fs.existsSync(normalized) || !fs.statSync(normalized).isDirectory()) {
+    throw new Error('O diretório de saída informado não existe ou não é um diretório válido.');
+  }
+
   return normalized;
 }
 

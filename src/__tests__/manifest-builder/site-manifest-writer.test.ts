@@ -8,6 +8,8 @@ vi.mock('fs');
 
 describe('SiteManifestWriter', () => {
   let writeFileSyncSpy: ReturnType<typeof vi.spyOn>;
+  let existsSyncSpy: ReturnType<typeof vi.spyOn>;
+  let statSyncSpy: ReturnType<typeof vi.spyOn>;
   let logSaveSpy: ReturnType<typeof vi.spyOn>;
   let logSuccessSpy: ReturnType<typeof vi.spyOn>;
   let logErrorSpy: ReturnType<typeof vi.spyOn>;
@@ -83,6 +85,8 @@ describe('SiteManifestWriter', () => {
 
   beforeEach(() => {
     writeFileSyncSpy = vi.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
+    existsSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
+    statSyncSpy = vi.spyOn(fs, 'statSync').mockReturnValue({ isDirectory: () => true } as fs.Stats);
     logSaveSpy = vi.spyOn(logger, 'logSave').mockImplementation(() => {});
     logSuccessSpy = vi.spyOn(logger, 'logSuccess').mockImplementation(() => {});
     logErrorSpy = vi.spyOn(logger, 'logError').mockImplementation(() => {});
@@ -90,6 +94,8 @@ describe('SiteManifestWriter', () => {
 
   afterEach(() => {
     writeFileSyncSpy.mockRestore();
+    existsSyncSpy.mockRestore();
+    statSyncSpy.mockRestore();
     logSaveSpy.mockRestore();
     logSuccessSpy.mockRestore();
     logErrorSpy.mockRestore();
@@ -110,6 +116,16 @@ describe('SiteManifestWriter', () => {
   it('lança erro quando o diretório de saída está vazio', async () => {
     await expect(saveSiteManifest(manifest, '   ')).rejects.toThrow(
       'O diretório de saída é obrigatório para salvar o site.json.',
+    );
+    expect(writeFileSyncSpy).not.toHaveBeenCalled();
+    expect(logErrorSpy).toHaveBeenCalledOnce();
+  });
+
+  it('lança erro quando o diretório de saída não existe', async () => {
+    existsSyncSpy.mockReturnValue(false);
+
+    await expect(saveSiteManifest(manifest, '/out/inexistente')).rejects.toThrow(
+      'O diretório de saída informado não existe ou não é um diretório válido.',
     );
     expect(writeFileSyncSpy).not.toHaveBeenCalled();
     expect(logErrorSpy).toHaveBeenCalledOnce();
