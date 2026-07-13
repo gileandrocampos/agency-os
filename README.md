@@ -8,6 +8,7 @@ A partir de uma URL, o Freelance OS:
 
 - Captura **screenshot desktop e mobile** da página
 - Salva o **HTML completo** renderizado
+- Gera um **site.json** tipado com os dados consolidados da página
 - Aguarda carregamento de imagens, fontes e idle da rede
 - Lida automaticamente com **overlays e banners de cookies**
 - Gera logs detalhados de cada etapa
@@ -41,6 +42,7 @@ output/
     screenshot-desktop.png
     screenshot-mobile.png
     page.html
+    site.json
 ```
 
 Os logs ficam em `logs/`.
@@ -58,9 +60,9 @@ Os logs ficam em `logs/`.
 ## Arquitetura
 
 ```
-CLI → Crawler → Page Preparer → Screenshot / HTML Saver
-                     ↓
-              Filesystem + Logger
+CLI → Crawler → Page Preparer → Screenshot / HTML Saver → ManifestBuilder
+      ↓
+    Filesystem + Logger
 ```
 
 ## Roadmap

@@ -4,9 +4,11 @@ import { loadPage } from '../../crawler/page-loader';
 import { captureScreenshot } from '../../crawler/screenshot';
 import { saveHtml } from '../../crawler/html-saver';
 import { ensureDir } from '../../filesystem';
+import { extractMetadata, parseSite } from '../../parser';
+import { buildSiteManifest, saveSiteManifest } from '../../manifest-builder';
 import { runCrawler } from '../../crawler/index';
 
-const { mockClose, mockPage, mockSession, mockParsedSite } = vi.hoisted(() => {
+const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest } = vi.hoisted(() => {
   const mockClose = vi.fn().mockResolvedValue(undefined);
   const mockPage = { content: vi.fn().mockResolvedValue('<html></html>') };
   const mockSession = { page: mockPage, close: mockClose };
@@ -25,7 +27,76 @@ const { mockClose, mockPage, mockSession, mockParsedSite } = vi.hoisted(() => {
     },
     images: [],
   };
-  return { mockClose, mockPage, mockSession, mockParsedSite };
+  const mockMetadata = {
+    title: 'Test',
+    description: 'Description',
+    keywords: null,
+    author: null,
+    viewport: null,
+    charset: null,
+    robots: null,
+    canonical: null,
+    openGraph: {
+      title: null,
+      description: null,
+      image: null,
+      url: null,
+      type: null,
+      siteName: null,
+    },
+    twitterCard: {
+      card: null,
+      title: null,
+      description: null,
+      image: null,
+    },
+  };
+  const mockSiteManifest = {
+    schemaVersion: '1.0.0',
+    source: {
+      url: 'https://example.com/',
+      domain: 'example.com',
+      timestamp: '2026-01-01_00-00-00',
+      outputDir: '/output/example.com_2026-01-01',
+      artifacts: {
+        htmlFile: '/out/page.html',
+        screenshots: {
+          desktop: '/out/screenshot-desktop.png',
+          mobile: '/out/screenshot-mobile.png',
+        },
+      },
+    },
+    content: {
+      language: null,
+      headings: [],
+      paragraphs: [],
+      links: [],
+      navigation: {
+        mainMenu: [],
+        footerMenu: [],
+        internalLinks: [],
+        externalLinks: [],
+      },
+      images: [],
+    },
+    analysis: {
+      seo: { metadata: mockMetadata, audit: {} },
+      ux: { audit: {} },
+      performance: { audit: {} },
+    },
+    generators: {
+      designSystem: {},
+      wireframes: {},
+    },
+    integrations: {
+      ai: {},
+      googleMaps: {},
+    },
+    platform: {
+      saas: {},
+    },
+  };
+  return { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest };
 });
 
 vi.mock('../../crawler/browser', () => ({
@@ -49,6 +120,12 @@ vi.mock('../../crawler/html-saver', () => ({
 
 vi.mock('../../parser', () => ({
   parseSite: vi.fn().mockReturnValue(mockParsedSite),
+  extractMetadata: vi.fn().mockReturnValue(mockMetadata),
+}));
+
+vi.mock('../../manifest-builder', () => ({
+  buildSiteManifest: vi.fn().mockReturnValue(mockSiteManifest),
+  saveSiteManifest: vi.fn().mockResolvedValue('/out/site.json'),
 }));
 
 vi.mock('../../logger', () => ({
@@ -80,7 +157,7 @@ describe('runCrawler', () => {
     mockClose.mockResolvedValue(undefined);
   });
 
-  it('retorna CrawlerResult com url, outputDir e caminhos de arquivos', async () => {
+  it('retorna CrawlerResult com url, outputDir, paths e manifesto', async () => {
     const result = await runCrawler('https://example.com');
     expect(result).toMatchObject({
       url: 'https://example.com/',
@@ -88,6 +165,8 @@ describe('runCrawler', () => {
       screenshotDesktop: '/out/screenshot-desktop.png',
       screenshotMobile: '/out/screenshot-mobile.png',
       htmlFile: '/out/page.html',
+      siteJsonFile: '/out/site.json',
+      siteManifest: mockSiteManifest,
       parsedSite: mockParsedSite,
     });
   });
@@ -100,6 +179,35 @@ describe('runCrawler', () => {
   it('chama loadPage com a URL validada', async () => {
     await runCrawler('https://example.com');
     expect(loadPage).toHaveBeenCalledWith(mockPage, 'https://example.com/');
+  });
+
+  it('chama extractMetadata com o HTML renderizado', async () => {
+    await runCrawler('https://example.com');
+    expect(extractMetadata).toHaveBeenCalledOnce();
+    expect(extractMetadata).toHaveBeenCalledWith('<html></html>');
+  });
+
+  it('chama buildSiteManifest com os dados consolidados', async () => {
+    await runCrawler('https://example.com');
+
+    expect(buildSiteManifest).toHaveBeenCalledOnce();
+    expect(buildSiteManifest).toHaveBeenCalledWith(expect.objectContaining({
+      url: 'https://example.com/',
+      domain: 'example.com',
+      timestamp: expect.any(String),
+      outputDir: '/output/example.com_2026-01-01',
+      htmlFile: '/out/page.html',
+      screenshotDesktop: '/out/screenshot-desktop.png',
+      screenshotMobile: '/out/screenshot-mobile.png',
+      parsedSite: mockParsedSite,
+      metadata: mockMetadata,
+    }));
+  });
+
+  it('chama saveSiteManifest uma vez', async () => {
+    await runCrawler('https://example.com');
+    expect(saveSiteManifest).toHaveBeenCalledOnce();
+    expect(saveSiteManifest).toHaveBeenCalledWith(mockSiteManifest, '/output/example.com_2026-01-01');
   });
 
   it('chama captureScreenshot duas vezes (desktop e mobile)', async () => {

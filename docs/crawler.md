@@ -100,7 +100,11 @@ Função pública exportada. Executada pela CLI.
      d. captureScreenshot(desktop)
      e. captureScreenshot(mobile)
      f. saveHtml()
-     g. session.close()  [sempre, via finally]
+     g. extractMetadata()
+     h. parseSite()
+     i. buildSiteManifest()
+     j. saveSiteManifest() → site.json
+     k. session.close()  [sempre, via finally]
 5. logSuccess
 6. return CrawlerResult
 ```
@@ -114,6 +118,28 @@ Função pública exportada. Executada pela CLI.
 | `screenshotDesktop` | `string` | Caminho do screenshot desktop      |
 | `screenshotMobile`  | `string` | Caminho do screenshot mobile       |
 | `htmlFile`          | `string` | Caminho do arquivo page.html       |
+| `siteJsonFile`      | `string`        | Caminho do arquivo site.json       |
+| `siteManifest`      | `SiteManifest`  | Manifesto consolidado do site       |
+
+### `site.json`
+
+Arquivo: `output/<domain>_<timestamp>/site.json`
+
+Estrutura base:
+
+```json
+{
+     "schemaVersion": "1.0.0",
+     "source": { "url": "...", "domain": "...", "timestamp": "...", "outputDir": "...", "artifacts": {} },
+     "content": { "language": null, "headings": [], "paragraphs": [], "links": [], "navigation": {}, "images": [] },
+     "analysis": { "seo": { "metadata": {}, "audit": {} }, "ux": { "audit": {} }, "performance": { "audit": {} } },
+     "generators": { "designSystem": {}, "wireframes": {} },
+     "integrations": { "ai": {}, "googleMaps": {} },
+     "platform": { "saas": {} }
+}
+```
+
+O ManifestBuilder valida o contrato, consolida os dados sem duplicação e reserva espaços vazios para módulos futuros.
 
 ---
 

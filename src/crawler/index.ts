@@ -21,7 +21,8 @@ import { loadPage } from './page-loader';
 import { captureScreenshot } from './screenshot';
 import { saveHtml } from './html-saver';
 import { PagePreparationService } from './page-preparer';
-import { parseSite } from '../parser';
+import { extractMetadata, parseSite } from '../parser';
+import { buildSiteManifest, saveSiteManifest } from '../manifest-builder';
 
 function buildConfig(rawUrl: string): CrawlerConfig {
   const url = validateUrl(rawUrl);
@@ -65,7 +66,21 @@ async function executeCrawl(
     logSave('Salvando HTML');
     const htmlPath = await saveHtml(html, config.outputDir);
 
+    const metadata = extractMetadata(html);
     const parsedSite = parseSite(html, config.url);
+    const siteManifest = buildSiteManifest({
+      url: config.url,
+      domain: config.domain,
+      timestamp: config.timestamp,
+      outputDir: config.outputDir,
+      htmlFile: htmlPath,
+      screenshotDesktop: desktopPath,
+      screenshotMobile: mobilePath,
+      parsedSite,
+      metadata,
+    });
+
+    const siteJsonFile = await saveSiteManifest(siteManifest, config.outputDir);
 
     return {
       url: config.url,
@@ -73,6 +88,8 @@ async function executeCrawl(
       screenshotDesktop: desktopPath,
       screenshotMobile: mobilePath,
       htmlFile: htmlPath,
+      siteJsonFile,
+      siteManifest,
       parsedSite,
     };
   } finally {

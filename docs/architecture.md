@@ -20,12 +20,15 @@ Crawler (src/crawler/index.ts) — runCrawler()
   │    ├─ ScrollActivator → scroll para ativar lazy load
   │    └─ IdleWaiter      → aguarda efeitos colaterais das interações
   ├─ Screenshot: captureScreenshot ×2 (desktop + mobile)
-  └─ HtmlSaver: saveHtml → page.html
+  ├─ HtmlSaver: saveHtml → page.html
+  ├─ Parser: parseSite + extractMetadata
+  └─ ManifestBuilder: buildSiteManifest + saveSiteManifest → site.json
        ↓
 Output (output/<domain>_<timestamp>/)
   ├─ screenshot-desktop.png
   ├─ screenshot-mobile.png
   └─ page.html
+  └─ site.json
 
 Logs (logs/execution.log)
 ```
@@ -44,6 +47,8 @@ Logs (logs/execution.log)
 | **Screenshot**    | `src/crawler/screenshot.ts`        | Captura screenshot fullpage por viewport                          |
 | **HtmlSaver**     | `src/crawler/html-saver.ts`        | Salva o HTML renderizado em disco                                 |
 | **Parser**        | `src/parser/index.ts`              | Extrai dados estruturados do HTML renderizado (título, headings, links, etc.) |
+| **MetadataExtractor** | `src/parser/metadata-extractor.ts` | Extrai metadados do `<head>` usados pelo SEO e pelo ManifestBuilder |
+| **ManifestBuilder** | `src/manifest-builder/`          | Consolida parser + metadata em um `site.json` tipado e validado            |
 | **FileSystem**    | `src/filesystem/index.ts`          | Cria diretórios e constrói caminhos de sessão                     |
 | **Logger**        | `src/logger/index.ts`              | Logs prefixados com timestamp no console e em arquivo             |
 | **Utils**         | `src/utils/`                       | Funções puras: validação de URL, extração de domínio, timestamp   |
@@ -66,3 +71,5 @@ Logs (logs/execution.log)
 ## Tipos compartilhados
 
 Ver `src/types/index.ts` e `src/types/preparation.ts`. Documentação completa em [page-preparation.md](page-preparation.md).
+
+O `site.json` é produzido pelo ManifestBuilder e passa a ser o contrato principal de dados para auditorias, geradores e integrações futuras.
