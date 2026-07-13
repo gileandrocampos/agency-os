@@ -1,7 +1,9 @@
 import type { ParsedSite } from '../parser';
 import type { SiteManifest } from '../manifest-builder';
+import type { BrandingExtractionResult } from '../branding-extractor';
 
 export type { ParsedSite };
+export type { BrandingExtractionResult };
 
 export interface CrawlerConfig {
   url: string;
@@ -20,6 +22,7 @@ export interface CrawlerResult {
   siteJsonFile: string;
   siteManifest: SiteManifest;
   parsedSite: ParsedSite;
+  branding: BrandingExtractionResult;
 }
 
 export interface ViewportConfig {

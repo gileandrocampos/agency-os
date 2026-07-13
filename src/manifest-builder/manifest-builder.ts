@@ -172,6 +172,7 @@ function buildSource(input: ManifestBuilderInput): ManifestSource {
 function validateInput(input: ManifestBuilderInput): void {
   ensureObject(input.parsedSite, 'parsedSite');
   ensureObject(input.metadata, 'metadata');
+  ensureObject(input.branding, 'branding');
   ensureObject(input.parsedSite.navigation, 'parsedSite.navigation');
   ensureObject(input.metadata.openGraph, 'metadata.openGraph');
   ensureObject(input.metadata.twitterCard, 'metadata.twitterCard');
@@ -219,6 +220,7 @@ function createManifest(input: ManifestBuilderInput): SiteManifest {
     schemaVersion: MANIFEST_SCHEMA_VERSION,
     source: buildSource(input),
     content: normalizeContent(input),
+    branding: input.branding,
     analysis: buildAnalysis(input),
     generators: buildGenerators(),
     integrations: buildIntegrations(),

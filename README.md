@@ -9,6 +9,7 @@ A partir de uma URL, o Freelance OS:
 - Captura **screenshot desktop e mobile** da página
 - Salva o **HTML completo** renderizado
 - Gera um **site.json** tipado com os dados consolidados da página
+- Extrai **identidade visual** (logo, favicon, cores, fontes, ícones, framework CSS e componentes)
 - Aguarda carregamento de imagens, fontes e idle da rede
 - Lida automaticamente com **overlays e banners de cookies**
 - Gera logs detalhados de cada etapa

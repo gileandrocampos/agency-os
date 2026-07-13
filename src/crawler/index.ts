@@ -22,6 +22,7 @@ import { captureScreenshot } from './screenshot';
 import { saveHtml } from './html-saver';
 import { PagePreparationService } from './page-preparer';
 import { extractMetadata, parseSite } from '../parser';
+import { extractBranding } from '../branding-extractor';
 import { buildSiteManifest, saveSiteManifest } from '../manifest-builder';
 
 function buildConfig(rawUrl: string): CrawlerConfig {
@@ -66,6 +67,8 @@ async function executeCrawl(
     logSave('Salvando HTML');
     const htmlPath = await saveHtml(html, config.outputDir);
 
+    const branding = await extractBranding(session.page);
+
     const metadata = extractMetadata(html);
     const parsedSite = parseSite(html, config.url);
     const siteManifest = buildSiteManifest({
@@ -78,6 +81,7 @@ async function executeCrawl(
       screenshotMobile: mobilePath,
       parsedSite,
       metadata,
+      branding,
     });
 
     const siteJsonFile = await saveSiteManifest(siteManifest, config.outputDir);
@@ -91,6 +95,7 @@ async function executeCrawl(
       siteJsonFile,
       siteManifest,
       parsedSite,
+      branding,
     };
   } finally {
     await session.close();
