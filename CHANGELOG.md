@@ -9,6 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ## [0.2.0] — Em progresso
 
 ### Added
+- `ManifestBuilder`: consolidação de `parseSite()` + `extractMetadata()` em um `site.json` validado e extensível
 - `SiteParser`: extração de title, description, language, headings, paragraphs, links e images via cheerio
 - `MetadataExtractor`: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
 - `Navigation Extractor`: extração de menu principal, links de footer e classificação de links internos/externos em formato serializável

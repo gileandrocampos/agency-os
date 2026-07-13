@@ -21,7 +21,8 @@
 ## Próximas versões (planejado)
 
 ### v0.2.0 Parser
-- [ ] Gerar site.json
+- [x] Gerar site.json
+- [x] ManifestBuilder: consolidar parser + metadata em um contrato estável
 - [x] SiteParser: extração de title, description, language, headings, paragraphs, links e images (cheerio)
 - [x] MetadataExtractor: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
 - [ ] Extrair textos

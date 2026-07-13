@@ -1,4 +1,5 @@
 import type { ParsedSite } from '../parser';
+import type { SiteManifest } from '../manifest-builder';
 
 export type { ParsedSite };
 
@@ -16,6 +17,8 @@ export interface CrawlerResult {
   screenshotDesktop: string;
   screenshotMobile: string;
   htmlFile: string;
+  siteJsonFile: string;
+  siteManifest: SiteManifest;
   parsedSite: ParsedSite;
 }
 
