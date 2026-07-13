@@ -1,4 +1,5 @@
 import type {
+  BrandingExtractionResult,
   Heading,
   Image,
   Link,
@@ -71,6 +72,7 @@ export interface SiteManifest {
   schemaVersion: string;
   source: ManifestSource;
   content: ManifestContent;
+  branding: BrandingExtractionResult;
   analysis: ManifestAnalysis;
   generators: ManifestGenerators;
   integrations: ManifestIntegrations;
@@ -87,4 +89,5 @@ export interface ManifestBuilderInput {
   screenshotMobile: string;
   parsedSite: ParsedSite;
   metadata: SiteMetadata;
+  branding: BrandingExtractionResult;
 }

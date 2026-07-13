@@ -69,6 +69,53 @@ describe('ManifestBuilder', () => {
         image: 'https://example.com/twitter.png',
       },
     },
+    branding: {
+      logo: null,
+      logoCandidates: [],
+      favicon: null,
+      palette: {
+        primary: '#0056ff',
+        secondary: '#111111',
+        accent: '#0056ff',
+        background: '#ffffff',
+        surface: '#f5f5f5',
+        text: '#111111',
+        predominant: [{ color: '#0056ff', count: 10 }],
+        all: ['#0056ff', '#111111', '#ffffff'],
+      },
+      fonts: [
+        {
+          family: 'Inter',
+          weights: ['400', '600'],
+          origin: 'google-fonts',
+          count: 20,
+        },
+      ],
+      iconLibrary: {
+        primary: { name: 'custom-svg', confidence: 0.6, evidence: ['Presença de elementos SVG no DOM'] },
+        detected: [{ name: 'custom-svg', confidence: 0.6, evidence: ['Presença de elementos SVG no DOM'] }],
+      },
+      cssFramework: { name: 'bootstrap', confidence: 0.9, evidence: ['Recurso externo detectado'] },
+      theme: 'light',
+      borderRadius: { predominant: '8px', values: ['8px', '999px'] },
+      spacing: {
+        predominantMargin: '0px',
+        predominantPadding: '16px',
+        predominantGap: '8px',
+        margins: ['0px'],
+        paddings: ['16px'],
+        gaps: ['8px'],
+      },
+      components: [{ name: 'navbar', count: 1, present: true }],
+      buttons: {
+        total: 1,
+        classFrequency: [{ className: 'btn-primary', count: 1 }],
+        predominantStyles: [
+          { backgroundColor: '#0056ff', textColor: '#ffffff', borderRadius: '999px', count: 1 },
+        ],
+        colors: ['#0056ff', '#ffffff'],
+      },
+    },
   };
 
   beforeEach(() => {
@@ -103,6 +150,7 @@ describe('ManifestBuilder', () => {
     ]);
     expect(manifest.content.navigation.mainMenu).toEqual([{ href: '/', text: 'Home' }]);
     expect(manifest.content.images).toEqual([{ src: '/logo.png', alt: 'Logo' }]);
+    expect(manifest.branding).toEqual(baseInput.branding);
     expect(manifest.analysis.seo.metadata.title).toBe('Título do site');
     expect(manifest.analysis.seo.audit).toEqual({});
     expect(manifest.analysis.ux.audit).toEqual({});

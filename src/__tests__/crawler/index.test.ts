@@ -6,9 +6,10 @@ import { saveHtml } from '../../crawler/html-saver';
 import { ensureDir } from '../../filesystem';
 import { extractMetadata, parseSite } from '../../parser';
 import { buildSiteManifest, saveSiteManifest } from '../../manifest-builder';
+import { extractBranding } from '../../branding-extractor';
 import { runCrawler } from '../../crawler/index';
 
-const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest } = vi.hoisted(() => {
+const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding } = vi.hoisted(() => {
   const mockClose = vi.fn().mockResolvedValue(undefined);
   const mockPage = { content: vi.fn().mockResolvedValue('<html></html>') };
   const mockSession = { page: mockPage, close: mockClose };
@@ -96,7 +97,45 @@ const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSite
       saas: {},
     },
   };
-  return { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest };
+  const mockBranding = {
+    logo: null,
+    logoCandidates: [],
+    favicon: null,
+    palette: {
+      primary: null,
+      secondary: null,
+      accent: null,
+      background: null,
+      surface: null,
+      text: null,
+      predominant: [],
+      all: [],
+    },
+    fonts: [],
+    iconLibrary: {
+      primary: { name: 'unknown', confidence: 0, evidence: [] },
+      detected: [],
+    },
+    cssFramework: { name: 'custom', confidence: 0.2, evidence: [] },
+    theme: 'mixed',
+    borderRadius: { predominant: null, values: [] },
+    spacing: {
+      predominantMargin: null,
+      predominantPadding: null,
+      predominantGap: null,
+      margins: [],
+      paddings: [],
+      gaps: [],
+    },
+    components: [],
+    buttons: {
+      total: 0,
+      classFrequency: [],
+      predominantStyles: [],
+      colors: [],
+    },
+  };
+  return { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding };
 });
 
 vi.mock('../../crawler/browser', () => ({
@@ -126,6 +165,10 @@ vi.mock('../../parser', () => ({
 vi.mock('../../manifest-builder', () => ({
   buildSiteManifest: vi.fn().mockReturnValue(mockSiteManifest),
   saveSiteManifest: vi.fn().mockResolvedValue('/out/site.json'),
+}));
+
+vi.mock('../../branding-extractor', () => ({
+  extractBranding: vi.fn().mockResolvedValue(mockBranding),
 }));
 
 vi.mock('../../logger', () => ({
@@ -168,7 +211,14 @@ describe('runCrawler', () => {
       siteJsonFile: '/out/site.json',
       siteManifest: mockSiteManifest,
       parsedSite: mockParsedSite,
+      branding: mockBranding,
     });
+  });
+
+  it('chama extractBranding com a página ativa', async () => {
+    await runCrawler('https://example.com');
+    expect(extractBranding).toHaveBeenCalledOnce();
+    expect(extractBranding).toHaveBeenCalledWith(mockPage);
   });
 
   it('chama createBrowserSession', async () => {
@@ -201,6 +251,7 @@ describe('runCrawler', () => {
       screenshotMobile: '/out/screenshot-mobile.png',
       parsedSite: mockParsedSite,
       metadata: mockMetadata,
+      branding: mockBranding,
     }));
   });
 

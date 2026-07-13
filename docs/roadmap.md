@@ -29,8 +29,9 @@
 - [ ] Contatos
 - [x] Menu
 - [ ] Imagens
-- [ ] Cores
-- [ ] Fontes
+- [x] Cores (BrandingExtractor)
+- [x] Fontes (BrandingExtractor)
+- [x] BrandingExtractor: logo, favicon, framework CSS, biblioteca de ícones, tema, componentes e botões
 
 ### v0.3.0 — Auditoria técnica
 - [ ] Análise de SEO (meta tags, headings, canonical, Open Graph)
