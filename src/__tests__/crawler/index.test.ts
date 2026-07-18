@@ -7,9 +7,10 @@ import { ensureDir } from '../../filesystem';
 import { extractMetadata, parseSite } from '../../parser';
 import { buildSiteManifest, saveSiteManifest } from '../../manifest-builder';
 import { extractBranding } from '../../branding-extractor';
+import { extractContacts } from '../../contact-extractor';
 import { runCrawler } from '../../crawler/index';
 
-const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding } = vi.hoisted(() => {
+const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding, mockContacts } = vi.hoisted(() => {
   const mockClose = vi.fn().mockResolvedValue(undefined);
   const mockPage = { content: vi.fn().mockResolvedValue('<html></html>') };
   const mockSession = { page: mockPage, close: mockClose };
@@ -79,6 +80,18 @@ const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSite
         externalLinks: [],
       },
       images: [],
+      contact: {
+        phones: [],
+        whatsapp: [],
+        emails: [],
+        addresses: [],
+        socialProfiles: [],
+        maps: [],
+        businessHours: [],
+        forms: [],
+        ctas: [],
+        branches: [],
+      },
     },
     analysis: {
       seo: { metadata: mockMetadata, audit: {} },
@@ -135,7 +148,19 @@ const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSite
       colors: [],
     },
   };
-  return { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding };
+  const mockContacts = {
+    phones: [{ raw: '(11) 99999-9999', normalized: '+5511999999999', source: 'text', confidence: 'high' }],
+    whatsapp: [{ url: 'https://wa.me/5511999999999', phone: '+5511999999999', source: 'href', confidence: 'high' }],
+    emails: [{ email: 'contato@example.com', source: 'href', confidence: 'high' }],
+    addresses: [{ text: 'Rua Teste, 123 - Sao Paulo', source: 'footer', confidence: 'medium' }],
+    socialProfiles: [{ platform: 'instagram', url: 'https://instagram.com/example', handle: 'example' }],
+    maps: [{ url: 'https://maps.google.com/?q=-23.55,-46.63', source: 'href', coordinates: { lat: -23.55, lng: -46.63 } }],
+    businessHours: [{ text: 'Segunda a Sexta 08:00 as 18:00', source: 'text' }],
+    forms: [{ action: '/contato', method: 'POST', requiredFields: 2, fieldNames: ['name', 'email'], hasCaptcha: false }],
+    ctas: [{ text: 'Fale conosco', href: '/contato' }],
+    branches: [{ name: 'Matriz', address: 'Rua Teste, 123 - Sao Paulo', phones: ['+5511999999999'], emails: ['contato@example.com'] }],
+  };
+  return { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding, mockContacts };
 });
 
 vi.mock('../../crawler/browser', () => ({
@@ -169,6 +194,10 @@ vi.mock('../../manifest-builder', () => ({
 
 vi.mock('../../branding-extractor', () => ({
   extractBranding: vi.fn().mockResolvedValue(mockBranding),
+}));
+
+vi.mock('../../contact-extractor', () => ({
+  extractContacts: vi.fn().mockReturnValue(mockContacts),
 }));
 
 vi.mock('../../logger', () => ({
@@ -212,6 +241,16 @@ describe('runCrawler', () => {
       siteManifest: mockSiteManifest,
       parsedSite: mockParsedSite,
       branding: mockBranding,
+      contacts: mockContacts,
+    });
+  });
+
+  it('chama extractContacts com html renderizado e baseUrl', async () => {
+    await runCrawler('https://example.com');
+    expect(extractContacts).toHaveBeenCalledOnce();
+    expect(extractContacts).toHaveBeenCalledWith({
+      html: '<html></html>',
+      baseUrl: 'https://example.com/',
     });
   });
 
@@ -252,6 +291,7 @@ describe('runCrawler', () => {
       parsedSite: mockParsedSite,
       metadata: mockMetadata,
       branding: mockBranding,
+      contacts: mockContacts,
     }));
   });
 

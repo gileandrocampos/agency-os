@@ -116,6 +116,44 @@ describe('ManifestBuilder', () => {
         colors: ['#0056ff', '#ffffff'],
       },
     },
+    contacts: {
+      phones: [
+        { raw: '(11) 99999-9999', normalized: '+5511999999999', source: 'text', confidence: 'high' },
+        { raw: '(11) 99999-9999', normalized: '+5511999999999', source: 'text', confidence: 'high' },
+      ],
+      whatsapp: [
+        { url: 'https://wa.me/5511999999999', phone: '+5511999999999', source: 'href', confidence: 'high' },
+      ],
+      emails: [
+        { email: 'contato@example.com', source: 'href', confidence: 'high' },
+      ],
+      addresses: [
+        { text: 'Rua Teste, 123 - Sao Paulo', source: 'footer', confidence: 'medium' },
+      ],
+      socialProfiles: [
+        { platform: 'instagram', url: 'https://instagram.com/example', handle: 'example' },
+      ],
+      maps: [
+        { url: 'https://maps.google.com/?q=-23.55,-46.63', source: 'href', coordinates: { lat: -23.55, lng: -46.63 } },
+      ],
+      businessHours: [
+        { text: 'Segunda a Sexta 08:00 as 18:00', source: 'text' },
+      ],
+      forms: [
+        { action: '/contato', method: 'POST', requiredFields: 2, fieldNames: ['name', 'email'], hasCaptcha: false },
+      ],
+      ctas: [
+        { text: 'Fale conosco', href: '/contato' },
+      ],
+      branches: [
+        {
+          name: 'Matriz',
+          address: 'Rua Teste, 123 - Sao Paulo',
+          phones: ['+5511999999999'],
+          emails: ['contato@example.com'],
+        },
+      ],
+    },
   };
 
   beforeEach(() => {
@@ -150,6 +188,10 @@ describe('ManifestBuilder', () => {
     ]);
     expect(manifest.content.navigation.mainMenu).toEqual([{ href: '/', text: 'Home' }]);
     expect(manifest.content.images).toEqual([{ src: '/logo.png', alt: 'Logo' }]);
+    expect(manifest.content.contact.phones).toEqual([
+      { raw: '(11) 99999-9999', normalized: '+5511999999999', source: 'text', confidence: 'high' },
+    ]);
+    expect(manifest.content.contact.ctas).toEqual([{ text: 'Fale conosco', href: '/contato' }]);
     expect(manifest.branding).toEqual(baseInput.branding);
     expect(manifest.analysis.seo.metadata.title).toBe('Título do site');
     expect(manifest.analysis.seo.audit).toEqual({});

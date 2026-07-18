@@ -23,6 +23,7 @@ import { saveHtml } from './html-saver';
 import { PagePreparationService } from './page-preparer';
 import { extractMetadata, parseSite } from '../parser';
 import { extractBranding } from '../branding-extractor';
+import { extractContacts } from '../contact-extractor';
 import { buildSiteManifest, saveSiteManifest } from '../manifest-builder';
 
 function buildConfig(rawUrl: string): CrawlerConfig {
@@ -71,6 +72,7 @@ async function executeCrawl(
 
     const metadata = extractMetadata(html);
     const parsedSite = parseSite(html, config.url);
+    const contacts = extractContacts({ html, baseUrl: config.url });
     const siteManifest = buildSiteManifest({
       url: config.url,
       domain: config.domain,
@@ -82,6 +84,7 @@ async function executeCrawl(
       parsedSite,
       metadata,
       branding,
+      contacts,
     });
 
     const siteJsonFile = await saveSiteManifest(siteManifest, config.outputDir);
@@ -96,6 +99,7 @@ async function executeCrawl(
       siteManifest,
       parsedSite,
       branding,
+      contacts,
     };
   } finally {
     await session.close();

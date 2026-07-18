@@ -10,6 +10,7 @@ A partir de uma URL, o Freelance OS:
 - Salva o **HTML completo** renderizado
 - Gera um **site.json** tipado com os dados consolidados da página
 - Extrai **identidade visual** (logo, favicon, cores, fontes, ícones, framework CSS e componentes)
+- Extrai **contatos completos** (telefones, WhatsApp, e-mails, endereço, redes sociais, Google Maps, horários, formulários e CTAs)
 - Aguarda carregamento de imagens, fontes e idle da rede
 - Lida automaticamente com **overlays e banners de cookies**
 - Gera logs detalhados de cada etapa

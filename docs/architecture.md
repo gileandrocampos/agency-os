@@ -22,6 +22,7 @@ Crawler (src/crawler/index.ts) — runCrawler()
   ├─ Screenshot: captureScreenshot ×2 (desktop + mobile)
   ├─ HtmlSaver: saveHtml → page.html
   ├─ BrandingExtractor: extractBranding
+  ├─ ContactExtractor: extractContacts
   ├─ Parser: parseSite + extractMetadata
   └─ ManifestBuilder: buildSiteManifest + saveSiteManifest → site.json
        ↓
@@ -49,6 +50,7 @@ Logs (logs/execution.log)
 | **HtmlSaver**     | `src/crawler/html-saver.ts`        | Salva o HTML renderizado em disco                                 |
 | **Parser**        | `src/parser/index.ts`              | Extrai dados estruturados do HTML renderizado (título, headings, links, etc.) |
 | **BrandingExtractor** | `src/branding-extractor/`      | Extrai identidade visual via DOM/CSS/recursos (logo, cores, fontes, tema, componentes) |
+| **ContactExtractor** | `src/contact-extractor/`       | Extrai e normaliza canais de contato (telefone, WhatsApp, e-mail, endereço, redes sociais, mapas, horários, formulários, CTAs, filiais) |
 | **MetadataExtractor** | `src/parser/metadata-extractor.ts` | Extrai metadados do `<head>` usados pelo SEO e pelo ManifestBuilder |
 | **ManifestBuilder** | `src/manifest-builder/`          | Consolida parser + metadata em um `site.json` tipado e validado            |
 | **FileSystem**    | `src/filesystem/index.ts`          | Cria diretórios e constrói caminhos de sessão                     |

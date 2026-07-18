@@ -58,6 +58,7 @@ O manifesto final contém:
 
 - `source`: dados da sessão e caminhos dos artefatos.
 - `content`: conteúdo textual e estrutural da página.
+- `content.contact`: contatos estruturados extraídos do HTML renderizado (telefones, WhatsApp, e-mails, endereço, social, mapas, horários, formulários, CTAs e filiais).
 - `analysis`: espaço para auditorias futuras, começando por SEO e UX.
 - `generators`: reservatórios para Design System e Wireframes.
 - `integrations`: pontos de integração com IA e Google Maps.
