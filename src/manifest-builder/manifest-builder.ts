@@ -1,4 +1,6 @@
 import { logError, logStart, logSuccess } from '../logger';
+import type { ContactExtractionResult } from '../contact-extractor';
+import type { Heading } from '../parser';
 import type {
   EmptySection,
   ManifestAnalysis,
@@ -78,11 +80,11 @@ function dedupeByKey<T>(items: T[], keyFactory: (item: T) => string): T[] {
   return uniqueItems;
 }
 
-function normalizeHeading(heading: { level: string; text: string }): { level: string; text: string } {
+function normalizeHeading(heading: Heading): Heading {
   return {
     level: heading.level.trim(),
     text: heading.text.trim(),
-  };
+  } as Heading;
 }
 
 function normalizeLink(link: { href: string; text: string }): { href: string; text: string } {
@@ -103,6 +105,25 @@ function normalizeNavigationLinks(links: { href: string; text: string }[]): { hr
   return dedupeByKey(links.map(normalizeLink), (link) => `${link.href}::${link.text}`);
 }
 
+function normalizeContactCollection<T>(items: T[], keyFactory: (item: T) => string): T[] {
+  return dedupeByKey(items, keyFactory);
+}
+
+function normalizeContacts(contacts: ContactExtractionResult): ContactExtractionResult {
+  return {
+    phones: normalizeContactCollection(contacts.phones, (item) => item.normalized),
+    whatsapp: normalizeContactCollection(contacts.whatsapp, (item) => `${item.url}::${item.phone ?? ''}`),
+    emails: normalizeContactCollection(contacts.emails, (item) => item.email),
+    addresses: normalizeContactCollection(contacts.addresses, (item) => item.text),
+    socialProfiles: normalizeContactCollection(contacts.socialProfiles, (item) => `${item.platform}::${item.url}`),
+    maps: normalizeContactCollection(contacts.maps, (item) => item.url),
+    businessHours: normalizeContactCollection(contacts.businessHours, (item) => item.text),
+    forms: normalizeContactCollection(contacts.forms, (item) => `${item.method}::${item.action ?? ''}::${item.fieldNames.join('|')}`),
+    ctas: normalizeContactCollection(contacts.ctas, (item) => `${item.text}::${item.href ?? ''}`),
+    branches: normalizeContactCollection(contacts.branches, (item) => `${item.name ?? ''}::${item.address ?? ''}`),
+  };
+}
+
 function normalizeContent(input: ManifestBuilderInput): ManifestContent {
   return {
     language: normalizeText(input.parsedSite.language),
@@ -116,6 +137,7 @@ function normalizeContent(input: ManifestBuilderInput): ManifestContent {
       externalLinks: normalizeNavigationLinks(input.parsedSite.navigation.externalLinks),
     },
     images: dedupeByKey(input.parsedSite.images.map(normalizeImage), (image) => `${image.src}::${image.alt}`),
+    contact: normalizeContacts(input.contacts),
   };
 }
 
@@ -173,6 +195,7 @@ function validateInput(input: ManifestBuilderInput): void {
   ensureObject(input.parsedSite, 'parsedSite');
   ensureObject(input.metadata, 'metadata');
   ensureObject(input.branding, 'branding');
+  ensureObject(input.contacts, 'contacts');
   ensureObject(input.parsedSite.navigation, 'parsedSite.navigation');
   ensureObject(input.metadata.openGraph, 'metadata.openGraph');
   ensureObject(input.metadata.twitterCard, 'metadata.twitterCard');
@@ -185,6 +208,16 @@ function validateInput(input: ManifestBuilderInput): void {
   ensureArray(input.parsedSite.navigation.internalLinks, 'parsedSite.navigation.internalLinks');
   ensureArray(input.parsedSite.navigation.externalLinks, 'parsedSite.navigation.externalLinks');
   ensureArray(input.parsedSite.images, 'parsedSite.images');
+  ensureArray(input.contacts.phones, 'contacts.phones');
+  ensureArray(input.contacts.whatsapp, 'contacts.whatsapp');
+  ensureArray(input.contacts.emails, 'contacts.emails');
+  ensureArray(input.contacts.addresses, 'contacts.addresses');
+  ensureArray(input.contacts.socialProfiles, 'contacts.socialProfiles');
+  ensureArray(input.contacts.maps, 'contacts.maps');
+  ensureArray(input.contacts.businessHours, 'contacts.businessHours');
+  ensureArray(input.contacts.forms, 'contacts.forms');
+  ensureArray(input.contacts.ctas, 'contacts.ctas');
+  ensureArray(input.contacts.branches, 'contacts.branches');
 }
 
 function buildAnalysis(input: ManifestBuilderInput): ManifestAnalysis {

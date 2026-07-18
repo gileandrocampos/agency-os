@@ -26,7 +26,7 @@
 - [x] SiteParser: extração de title, description, language, headings, paragraphs, links e images (cheerio)
 - [x] MetadataExtractor: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
 - [ ] Extrair textos
-- [ ] Contatos
+- [x] Contatos
 - [x] Menu
 - [ ] Imagens
 - [x] Cores (BrandingExtractor)

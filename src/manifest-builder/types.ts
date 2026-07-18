@@ -1,5 +1,4 @@
 import type {
-  BrandingExtractionResult,
   Heading,
   Image,
   Link,
@@ -7,6 +6,8 @@ import type {
   ParsedSite,
   SiteMetadata,
 } from '../parser';
+import type { BrandingExtractionResult } from '../branding-extractor';
+import type { ContactExtractionResult } from '../contact-extractor';
 
 export type EmptySection = Record<string, never>;
 
@@ -66,6 +67,7 @@ export interface ManifestContent {
   links: Link[];
   navigation: NavigationData;
   images: Image[];
+  contact: ContactExtractionResult;
 }
 
 export interface SiteManifest {
@@ -90,4 +92,5 @@ export interface ManifestBuilderInput {
   parsedSite: ParsedSite;
   metadata: SiteMetadata;
   branding: BrandingExtractionResult;
+  contacts: ContactExtractionResult;
 }
