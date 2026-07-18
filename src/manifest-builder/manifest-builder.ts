@@ -82,9 +82,9 @@ function dedupeByKey<T>(items: T[], keyFactory: (item: T) => string): T[] {
 
 function normalizeHeading(heading: Heading): Heading {
   return {
-    level: heading.level.trim(),
+    level: heading.level,
     text: heading.text.trim(),
-  } as Heading;
+  };
 }
 
 function normalizeLink(link: { href: string; text: string }): { href: string; text: string } {

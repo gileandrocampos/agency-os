@@ -342,7 +342,7 @@ function extractForms($: CheerioAPI): ContactFormSummary[] {
     forms.push({ action, method, requiredFields, hasCaptcha, fieldNames });
   });
 
-  return forms;
+  return dedupeByKey(forms, (item) => `${item.action ?? ''}::${item.method}::${item.fieldNames.join(',')}`);
 }
 
 function extractCtas($: CheerioAPI): ContactCta[] {
@@ -401,10 +401,7 @@ function collectAddressFromMaps(maps: MapReference[]): AddressContact[] {
 }
 
 function normalizeConfidence<T extends { confidence: ContactConfidence }>(items: T[]): T[] {
-  return items.map((item) => {
-    if (item.confidence === 'high' || item.confidence === 'medium') return item;
-    return item;
-  });
+  return items;
 }
 
 function buildExtractionResult($: CheerioAPI, input: ContactExtractorInput): ContactExtractionResult {
