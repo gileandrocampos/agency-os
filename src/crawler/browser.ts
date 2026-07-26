@@ -6,7 +6,7 @@ export interface BrowserSession {
 }
 
 export async function createBrowserSession(): Promise<BrowserSession> {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: false, slowMo: 500});
   const context: BrowserContext = await browser.newContext();
   const page = await context.newPage();
 

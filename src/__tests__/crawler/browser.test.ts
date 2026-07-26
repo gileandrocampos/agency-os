@@ -44,7 +44,7 @@ describe('createBrowserSession', () => {
   it('lança chromium com headless: true', async () => {
     const { chromium } = await import('playwright');
     await createBrowserSession();
-    expect(chromium.launch).toHaveBeenCalledWith({ headless: true });
+    expect(chromium.launch).toHaveBeenCalledWith({ headless: false, slowMo: 500 });
   });
 
   it('close() chama context.close e browser.close', async () => {
