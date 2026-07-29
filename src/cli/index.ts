@@ -1,26 +1,13 @@
-import { runCrawler } from '../crawler';
-import { logError } from '../logger';
+#!/usr/bin/env node
+import { Command } from 'commander';
+import { registerCrawlCommand } from './commands/crawl.command';
 
-function parseCliArgs(argv: string[]): string | null {
-  return argv[2] ?? null;
-}
+const program = new Command();
 
-async function main(): Promise<void> {
-  const rawUrl = parseCliArgs(process.argv);
+program
+  .name('agency-os')
+  .description('Automatizador de criação de sites, análise, curadoria e busca de leads')
+  .version('0.1.0');
 
-  if (!rawUrl) {
-    console.error('❌ URL não fornecida.');
-    console.error('   Uso: npm run crawl <url>');
-    console.error('   Exemplo: npm run crawl https://example.com');
-    process.exit(1);
-  }
-
-  try {
-    await runCrawler(rawUrl);
-  } catch (error) {
-    logError('Falha na execução do crawler', error);
-    process.exit(1);
-  }
-}
-
-main();
+registerCrawlCommand(program);
+program.parseAsync(process.argv);
