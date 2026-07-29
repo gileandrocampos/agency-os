@@ -3,7 +3,7 @@
 ## Visão geral do fluxo
 
 ```
-CLI (src/cli/index.ts)
+CLI (src/cli/)
   └─ parseCliArgs → rawUrl
        ↓
 Crawler (src/crawler/index.ts) — runCrawler()
@@ -41,7 +41,8 @@ Logs (logs/execution.log)
 
 | Camada            | Localização                        | Responsabilidade                                                  |
 |-------------------|------------------------------------|-------------------------------------------------------------------|
-| **CLI**           | `src/cli/index.ts`                 | Ponto de entrada: parseia args e delega ao Crawler                |
+| **CLI**           | `src/cli/`                         | Ponto de entrada: parseia args e delega ao Crawler                |
+| **Application**   | `src/application/`                 | Ponte entre CLI e Dominios do sistema. (Orquesta as chamadas)     |
 | **Crawler**       | `src/crawler/index.ts`             | Orquestra o fluxo completo de uma sessão de crawl                 |
 | **Browser**       | `src/crawler/browser.ts`           | Cria e fecha sessão Playwright (browser + context + page)         |
 | **PageLoader**    | `src/crawler/page-loader.ts`       | Navega para a URL e aguarda `networkidle`                         |

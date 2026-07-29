@@ -73,7 +73,8 @@ async function executeCrawl(
 
 | Módulo | Localização | Responsabilidade |
 |---|---|---|
-| CLI | `src/cli/index.ts` | Ponto de entrada: parseia args e delega ao Crawler |
+| CLI | `src/cli/` | Ponto de entrada: parseia args e delega ao Crawler |
+| Application | `src/crawl-site.usecase.ts` | a ponte entre CLI e domínio |
 | Crawler | `src/crawler/index.ts` | Orquestra o fluxo completo de uma sessão |
 | Browser | `src/crawler/browser.ts` | Cria e fecha sessão Playwright |
 | PageLoader | `src/crawler/page-loader.ts` | Navega para a URL e aguarda `networkidle` |
@@ -97,8 +98,8 @@ async function executeCrawl(
 
 | Script | Comando | Descrição |
 |---|---|---|
-| `npm run crawl` | `tsx src/cli/index.ts <url>` | Executa o crawler |
-| `npm run safe-crawl` | `tsx scripts/run.ts <url>` | Roda testes; aborta se algum falhar |
+| `npm run crawl <url>` | `tsx src/cli/index.ts crawl` | Executa o crawler |
+| `npm run safe-crawl <url>` | `npm test && npm run crawl` | Roda testes; aborta se algum falhar |
 | `npm run test` | `vitest run` | Suite de testes |
 | `npm run test:coverage` | `vitest run --coverage` | Testes com cobertura |
 
