@@ -1,60 +1,28 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+// src/__tests__/cli/index.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Command } from 'commander';
 
-vi.mock('../../crawler', () => ({
-  runCrawler: vi.fn(),
+vi.mock('../../application/crawl-site.usecase', () => ({
+  crawlSiteUseCase: vi.fn(),
 }));
 
-vi.mock('../../logger', () => ({
-  logError: vi.fn(),
-}));
+import { crawlSiteUseCase } from '../../application/crawl-site.usecase';
+import { registerCrawlCommand } from '../../cli/commands/crawl.command';
 
-const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
-
-describe('CLI index', () => {
-  let exitSpy: ReturnType<typeof vi.spyOn>;
-  let originalArgv: string[];
-
+describe('CLI - comando crawl', () => {
   beforeEach(() => {
-    vi.resetModules();
-    originalArgv = [...process.argv];
-    exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
-  });
-
-  afterEach(() => {
-    process.argv = originalArgv;
-    exitSpy.mockRestore();
     vi.clearAllMocks();
   });
 
-  it('chama process.exit(1) quando URL não é fornecida', async () => {
-    process.argv = ['node', 'script'];
-    await import('../../cli/index');
-    await flushPromises();
-    expect(exitSpy).toHaveBeenCalledWith(1);
-  });
+  it('aciona crawlSiteUseCase ao rodar "crawl <url>"', async () => {
+    (crawlSiteUseCase as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
-  it('chama runCrawler com a URL fornecida', async () => {
-    const { runCrawler } = await import('../../crawler');
-    (runCrawler as ReturnType<typeof vi.fn>).mockResolvedValue({});
+    const program = new Command();
+    program.exitOverride(); // evita que o Commander chame process.exit em erros
+    registerCrawlCommand(program);
 
-    process.argv = ['node', 'script', 'https://example.com'];
-    await import('../../cli/index');
-    await flushPromises();
+    await program.parseAsync(['node', 'script', 'crawl', 'https://example.com']);
 
-    expect(runCrawler).toHaveBeenCalledWith('https://example.com');
-  });
-
-  it('chama logError e process.exit(1) quando runCrawler lança erro', async () => {
-    const { runCrawler } = await import('../../crawler');
-    const { logError } = await import('../../logger');
-    const err = new Error('falha no crawl');
-    (runCrawler as ReturnType<typeof vi.fn>).mockRejectedValue(err);
-
-    process.argv = ['node', 'script', 'https://example.com'];
-    await import('../../cli/index');
-    await flushPromises();
-
-    expect(logError).toHaveBeenCalledWith('Falha na execução do crawler', err);
-    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(crawlSiteUseCase).toHaveBeenCalledWith({ url: 'https://example.com' });
   });
 });
