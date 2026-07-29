@@ -10,14 +10,15 @@
     "build": "tsc",
     "start": "tsx src/cli/index.ts",
     "dev": "tsx src/cli/index.ts",
-    "crawl": "tsx src/cli/index.ts",
-    "safe-crawl": "tsx scripts/run.ts",
+    "crawl": "tsx src/cli/index.ts crawl",
+    "safe-crawl": "npm test && npm run crawl",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "cheerio": "^1.2.0",
+    "commander": "^15.0.0",
     "playwright": "^1.40.0"
   },
   "devDependencies": {
