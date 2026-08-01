@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as logger from '../../logger';
 import { saveSiteManifest, SITE_MANIFEST_FILE_NAME } from '../../manifest-builder';
+import type { SiteManifest } from '../../manifest-builder';
 
 vi.mock('fs');
 
@@ -14,7 +15,7 @@ describe('SiteManifestWriter', () => {
   let logSuccessSpy: ReturnType<typeof vi.spyOn>;
   let logErrorSpy: ReturnType<typeof vi.spyOn>;
 
-  const manifest = {
+  const manifest: SiteManifest = {
     schemaVersion: '1.0.0',
     source: {
       url: 'https://example.com/',
@@ -41,6 +42,18 @@ describe('SiteManifestWriter', () => {
         externalLinks: [],
       },
       images: [],
+      contact: {
+        phones: [],
+        whatsapp: [],
+        emails: [],
+        addresses: [],
+        socialProfiles: [],
+        maps: [],
+        businessHours: [],
+        forms: [],
+        ctas: [],
+        branches: [],
+      },
     },
     branding: {
       logo: null,

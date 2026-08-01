@@ -10,7 +10,17 @@ import { extractBranding } from '../../branding-extractor';
 import { extractContacts } from '../../contact-extractor';
 import { runCrawler } from '../../crawler/index';
 
-const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding, mockContacts } = vi.hoisted(() => {
+const {
+  mockClose,
+  mockPage,
+  mockSession,
+  mockParsedSite,
+  mockMetadata,
+  mockSiteManifest,
+  mockBranding,
+  mockContacts,
+  mockConfigService,
+} = vi.hoisted(() => {
   const mockClose = vi.fn().mockResolvedValue(undefined);
   const mockPage = { content: vi.fn().mockResolvedValue('<html></html>') };
   const mockSession = { page: mockPage, close: mockClose };
@@ -160,7 +170,32 @@ const { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSite
     ctas: [{ text: 'Fale conosco', href: '/contato' }],
     branches: [{ name: 'Matriz', address: 'Rua Teste, 123 - Sao Paulo', phones: ['+5511999999999'], emails: ['contato@example.com'] }],
   };
-  return { mockClose, mockPage, mockSession, mockParsedSite, mockMetadata, mockSiteManifest, mockBranding, mockContacts };
+  const mockConfigService = {
+    read: vi.fn().mockResolvedValue({
+      storage: {
+        logsDir: '/logs',
+        outputDir: '/output',
+      },
+      browser: {},
+      network: {},
+      locale: {},
+      logging: {},
+      terminal: {},
+      integrations: {},
+    }),
+    write: vi.fn(),
+  };
+  return {
+    mockClose,
+    mockPage,
+    mockSession,
+    mockParsedSite,
+    mockMetadata,
+    mockSiteManifest,
+    mockBranding,
+    mockContacts,
+    mockConfigService,
+  };
 });
 
 vi.mock('../../crawler/browser', () => ({
@@ -222,6 +257,18 @@ vi.mock('../../filesystem', () => ({
 describe('runCrawler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockConfigService.read.mockResolvedValue({
+      storage: {
+        logsDir: '/logs',
+        outputDir: '/output',
+      },
+      browser: {},
+      network: {},
+      locale: {},
+      logging: {},
+      terminal: {},
+      integrations: {},
+    });
     (captureScreenshot as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce('/out/screenshot-desktop.png')
       .mockResolvedValueOnce('/out/screenshot-mobile.png');
@@ -229,8 +276,12 @@ describe('runCrawler', () => {
     mockClose.mockResolvedValue(undefined);
   });
 
+  async function runDefaultCrawler() {
+    return runCrawler('https://example.com', mockConfigService);
+  }
+
   it('retorna CrawlerResult com url, outputDir, paths e manifesto', async () => {
-    const result = await runCrawler('https://example.com');
+    const result = await runDefaultCrawler();
     expect(result).toMatchObject({
       url: 'https://example.com/',
       outputDir: '/output/example.com_2026-01-01',
@@ -246,7 +297,7 @@ describe('runCrawler', () => {
   });
 
   it('chama extractContacts com html renderizado e baseUrl', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(extractContacts).toHaveBeenCalledOnce();
     expect(extractContacts).toHaveBeenCalledWith({
       html: '<html></html>',
@@ -255,29 +306,29 @@ describe('runCrawler', () => {
   });
 
   it('chama extractBranding com a página ativa', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(extractBranding).toHaveBeenCalledOnce();
     expect(extractBranding).toHaveBeenCalledWith(mockPage);
   });
 
   it('chama createBrowserSession', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(createBrowserSession).toHaveBeenCalledOnce();
   });
 
   it('chama loadPage com a URL validada', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(loadPage).toHaveBeenCalledWith(mockPage, 'https://example.com/');
   });
 
   it('chama extractMetadata com o HTML renderizado', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(extractMetadata).toHaveBeenCalledOnce();
     expect(extractMetadata).toHaveBeenCalledWith('<html></html>');
   });
 
   it('chama buildSiteManifest com os dados consolidados', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
 
     expect(buildSiteManifest).toHaveBeenCalledOnce();
     expect(buildSiteManifest).toHaveBeenCalledWith(expect.objectContaining({
@@ -296,35 +347,40 @@ describe('runCrawler', () => {
   });
 
   it('chama saveSiteManifest uma vez', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(saveSiteManifest).toHaveBeenCalledOnce();
     expect(saveSiteManifest).toHaveBeenCalledWith(mockSiteManifest, '/output/example.com_2026-01-01');
   });
 
   it('chama captureScreenshot duas vezes (desktop e mobile)', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(captureScreenshot).toHaveBeenCalledTimes(2);
   });
 
   it('chama saveHtml uma vez', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(saveHtml).toHaveBeenCalledOnce();
     expect(saveHtml).toHaveBeenCalledWith('<html></html>', '/output/example.com_2026-01-01');
   });
 
   it('obtém o HTML da página apenas uma vez', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(mockPage.content).toHaveBeenCalledOnce();
   });
 
   it('chama session.close() ao final (finally)', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(mockClose).toHaveBeenCalledOnce();
   });
 
   it('chama ensureDir para logsDir e outputDir', async () => {
-    await runCrawler('https://example.com');
+    await runDefaultCrawler();
     expect(ensureDir).toHaveBeenCalledTimes(2);
+  });
+
+  it('carrega configuração global via serviço injetado', async () => {
+    await runDefaultCrawler();
+    expect(mockConfigService.read).toHaveBeenCalledOnce();
   });
 
   it('lança erro se URL for inválida', async () => {
@@ -333,7 +389,7 @@ describe('runCrawler', () => {
 
   it('chama session.close() mesmo quando loadPage lança erro', async () => {
     (loadPage as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('falha'));
-    await expect(runCrawler('https://example.com')).rejects.toThrow('falha');
+    await expect(runDefaultCrawler()).rejects.toThrow('falha');
     expect(mockClose).toHaveBeenCalledOnce();
   });
 });

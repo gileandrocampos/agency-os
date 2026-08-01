@@ -88,9 +88,10 @@ describe('logger', () => {
     const err = new Error('detalhe');
     logError('falhou', err);
     const calls = appendFileSyncMock.mock.calls;
-    const hasStack = calls.some(([, content]) =>
-      typeof content === 'string' && content.includes('STACK TRACE'),
-    );
+    const hasStack = calls.some((call: unknown[]) => {
+      const content = call[1];
+      return typeof content === 'string' && content.includes('STACK TRACE');
+    });
     expect(hasStack).toBe(true);
   });
 

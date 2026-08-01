@@ -1,0 +1,12 @@
+{
+  "storage": {
+    "logsDir": "logs",
+    "outputDir": "output"
+  },
+  "browser": {},
+  "network": {},
+  "locale": {},
+  "logging": {},
+  "terminal": {},
+  "integrations": {}
+}
