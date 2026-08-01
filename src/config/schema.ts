@@ -53,5 +53,13 @@ export const GLOBAL_CONFIG_SCHEMA: ConfigSchemaNode = {
       additionalProperties: true,
       defaultValue: {},
     },
+    retry: {
+      type: 'object',
+      additionalProperties: true,
+      properties: {
+        maxAttempts: { type: 'number', defaultValue: 3 },
+        backoffMs: { type: 'number', defaultValue: 1000 },
+      },
+    },
   },
 };

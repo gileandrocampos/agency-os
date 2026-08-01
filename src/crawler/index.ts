@@ -11,6 +11,7 @@ import {
   logSave,
   logSuccess,
   logError,
+  logRetry,
 } from '../logger';
 import { validateUrl, extractDomain } from '../utils/url-validator';
 import { generateTimestamp } from '../utils/time';
@@ -21,6 +22,7 @@ import { loadPage } from './page-loader';
 import { captureScreenshot } from './screenshot';
 import { saveHtml } from './html-saver';
 import { PagePreparationService } from './page-preparer';
+import { withRetry } from './retry';
 import { extractMetadata, parseSite } from '../parser';
 import { extractBranding } from '../branding-extractor';
 import { extractContacts } from '../contact-extractor';
@@ -125,7 +127,12 @@ export async function runCrawler(
   logUrl(`Validando URL: ${rawUrl}`);
   logDir('Criando diretórios');
 
-  const result = await executeCrawl(config);
+  const retryOptions = {
+    maxAttempts: globalConfig.retry.maxAttempts,
+    backoffMs: globalConfig.retry.backoffMs,
+  };
+
+  const result = await withRetry(() => executeCrawl(config), retryOptions);
 
   logSuccess('Processo concluído');
 

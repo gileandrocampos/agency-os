@@ -17,6 +17,11 @@ export interface GlobalConfig {
   logging: Record<string, JsonValue>;
   terminal: Record<string, JsonValue>;
   integrations: Record<string, JsonValue>;
+  retry: {
+    maxAttempts: number;
+    backoffMs: number;
+    [key: string]: JsonValue;
+  };
   [key: string]: JsonValue;
 }
 
