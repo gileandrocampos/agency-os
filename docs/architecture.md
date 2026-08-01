@@ -64,12 +64,12 @@ Logs (logs/execution.log)
 
 ## Scripts
 
-| Script             | Comando                          | Descrição                                              |
-|--------------------|----------------------------------|--------------------------------------------------------|
-| `npm run crawl`    | `tsx src/cli/index.ts <url>`     | Executa o crawler diretamente                          |
-| `npm run safe-crawl`| `tsx scripts/run.ts <url>`      | Roda testes primeiro; aborta se algum falhar           |
-| `npm run test`     | `vitest run`                     | Executa a suite de testes                              |
-| `npm run test:coverage` | `vitest run --coverage`    | Executa testes com relatório de cobertura              |
+| Script | Comando | Descrição |
+|---|---|---|
+| `npm run crawl` | `npm run crawl <url>` | Executa o crawler diretamente |
+| `npm run safe-crawl` | `npm run safe-crawl <url>` | Roda testes primeiro; aborta se algum falhar |
+| `npm run test` | `vitest run` | Executa a suite de testes |
+| `npm run test:coverage` | `vitest run --coverage` | Executa testes com relatório de cobertura |
 
 ---
 

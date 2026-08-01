@@ -9,12 +9,12 @@ applyTo: "src/cli/**,src/crawl-site.usecase.ts"
 | Módulo | Localização | Responsabilidade |
 |---|---|---|
 | CLI | `src/cli/` | Ponto de entrada: parseia args e delega ao Crawler |
-| Application | `src/crawl-site.usecase.ts` | Ponte entre CLI e domínio |
+| Application | `src/application/crawl-site.usecase.ts` | Ponte entre CLI e domínio |
 
 ## Regras específicas
 
 - CLI é a única camada autorizada a chamar `process.exit` ou ler `process.argv`.
-- CLI não conhece detalhes de implementação do Crawler — só chama o use case (`crawl-site.usecase.ts`)
+- CLI não conhece detalhes de implementação do Crawler — só chama o use case (`src/application/crawl-site.usecase.ts`)
   com um `CrawlerConfig` já validado.
 - Validação de URL e de args acontece aqui, na borda. Erros de entrada inválida lançam `Error`
   descritivo (ver regra geral de tratamento de erros no `copilot-instructions.md` raiz).

@@ -14,7 +14,7 @@ Este projeto usa dois níveis de instruções para o Copilot:
 
 ## Por que agrupado assim, e não 1 arquivo por módulo
 
-Os 18 módulos do projeto foram agrupados em 5 arquivos por **fronteira de responsabilidade**,
+Os módulos do projeto foram agrupados em 5 arquivos por **fronteira de responsabilidade**,
 não 1:1 com cada pasta — isso mantém o número de arquivos gerenciável e agrupa módulos que
 sempre são tocados juntos numa mesma feature:
 

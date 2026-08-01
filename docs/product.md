@@ -22,11 +22,12 @@ npm run safe-crawl https://example.com
 
 O resultado é salvo em `output/<domínio>_<timestamp>/`:
 
-| Arquivo                  | Descrição                              |
-|--------------------------|----------------------------------------|
-| `screenshot-desktop.png` | Captura fullpage em resolução desktop  |
-| `screenshot-mobile.png`  | Captura fullpage em resolução mobile   |
-| `page.html`              | HTML completo da página após renderização |
+| Arquivo | Descrição |
+|---|---|
+| `screenshot-desktop.png` | Captura fullpage em resolução desktop |
+| `screenshot-mobile.png` | Captura fullpage em resolução mobile |
+| `page.html` | HTML completo da página após renderização |
+| `site.json` | Manifesto consolidado com os dados extraídos |
 
 Logs de execução são gravados em `logs/execution.log`.
 
