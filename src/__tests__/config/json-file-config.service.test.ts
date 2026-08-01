@@ -22,10 +22,10 @@ describe('JsonFileConfigService', () => {
 
     const config = await service.read();
 
-    expect(config.storage.logsDir).toBe(path.resolve('logs'));
-    expect(config.storage.outputDir).toBe(path.resolve('output'));
+    expect(config.storage.logsDir).toBe('logs');
+    expect(config.storage.outputDir).toBe('output');
     const persisted = JSON.parse(await fs.readFile(configFilePath, 'utf-8')) as { storage?: { logsDir?: string } };
-    expect(persisted.storage?.logsDir).toBe(path.resolve('logs'));
+    expect(persisted.storage?.logsDir).toBe('logs');
   });
 
   it('aplica defaults para campos ausentes ao carregar', async () => {
@@ -35,7 +35,7 @@ describe('JsonFileConfigService', () => {
     const config = await service.read();
 
     expect(config.storage.logsDir).toBe('/custom-logs');
-    expect(config.storage.outputDir).toBe(path.resolve('output'));
+    expect(config.storage.outputDir).toBe('output');
   });
 
   it('preserva chaves extras para futuras configurações', async () => {
@@ -76,7 +76,7 @@ describe('JsonFileConfigService', () => {
     });
 
     expect(saved.storage.logsDir).toBe('/novo-logs');
-    expect(saved.storage.outputDir).toBe(path.resolve('output'));
+    expect(saved.storage.outputDir).toBe('output');
     expect(saved.browser.headless).toBe(true);
   });
 

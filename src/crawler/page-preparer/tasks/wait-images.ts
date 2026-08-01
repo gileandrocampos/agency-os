@@ -42,7 +42,7 @@ export class WaitImagesTask {
         },
       };
 
-      // Typed as Promise<void[]> then cast via the outer Promise.race — no .then() cast needed.
+      // .then(() => undefined) normalizes Promise<void[]> to Promise<void> so Promise.race resolves as Promise<void>.
       const allLoaded = Promise.all(
         images.map((img) => loader.waitForImage(img)),
       ).then(() => undefined);

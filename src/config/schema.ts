@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { JsonValue } from './types';
 
 export type ConfigSchemaType = 'string' | 'number' | 'boolean' | 'object' | 'array' | 'null';
@@ -19,8 +18,8 @@ export const GLOBAL_CONFIG_SCHEMA: ConfigSchemaNode = {
       type: 'object',
       additionalProperties: true,
       properties: {
-        logsDir: { type: 'string', defaultValue: path.resolve('logs') },
-        outputDir: { type: 'string', defaultValue: path.resolve('output') },
+        logsDir: { type: 'string', defaultValue: 'logs' },
+        outputDir: { type: 'string', defaultValue: 'output' },
       },
     },
     browser: {

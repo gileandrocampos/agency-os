@@ -26,8 +26,7 @@ import { extractBranding } from '../branding-extractor';
 import { extractContacts } from '../contact-extractor';
 import { buildSiteManifest, saveSiteManifest } from '../manifest-builder';
 
-function buildConfig(rawUrl: string, globalConfig: GlobalConfig): CrawlerConfig {
-  const url = validateUrl(rawUrl);
+function buildConfig(url: URL, globalConfig: GlobalConfig): CrawlerConfig {
   const domain = extractDomain(url);
   const timestamp = generateTimestamp();
   const outputDir = buildSessionDir(globalConfig.storage.outputDir, domain, timestamp);
@@ -116,8 +115,9 @@ export async function runCrawler(
   rawUrl: string,
   configService: GlobalConfigService = new JsonFileConfigService(),
 ): Promise<CrawlerResult> {
+  const url = validateUrl(rawUrl);
   const globalConfig = await configService.read();
-  const config = buildConfig(rawUrl, globalConfig);
+  const config = buildConfig(url, globalConfig);
 
   setupSession(config);
 

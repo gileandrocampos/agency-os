@@ -8,7 +8,13 @@ export interface ConfigValidationIssue {
 
 export function normalizeWithSchema(value: unknown, schema: ConfigSchemaNode): JsonValue {
   if (schema.type === 'object') {
-    return normalizeObject(value, schema);
+    if (value === undefined) {
+      return normalizeObject({} as JsonObject, schema);
+    }
+    if (!isPlainObject(value)) {
+      return value as JsonValue;
+    }
+    return normalizeObject(value as JsonObject, schema);
   }
 
   if (value === undefined) {
@@ -16,6 +22,9 @@ export function normalizeWithSchema(value: unknown, schema: ConfigSchemaNode): J
   }
 
   if (schema.type === 'array') {
+    if (!Array.isArray(value)) {
+      return value as JsonValue;
+    }
     return normalizeArray(value, schema);
   }
 
@@ -57,8 +66,7 @@ export function validateWithSchema(
   return issues;
 }
 
-function normalizeObject(value: unknown, schema: ConfigSchemaNode): JsonObject {
-  const source = isPlainObject(value) ? (value as JsonObject) : {};
+function normalizeObject(source: JsonObject, schema: ConfigSchemaNode): JsonObject {
   const normalized: JsonObject = {};
   const properties = schema.properties ?? {};
 
@@ -77,13 +85,9 @@ function normalizeObject(value: unknown, schema: ConfigSchemaNode): JsonObject {
   return normalized;
 }
 
-function normalizeArray(value: unknown, schema: ConfigSchemaNode): JsonArray {
-  if (!Array.isArray(value)) {
-    return Array.isArray(schema.defaultValue) ? schema.defaultValue : [];
-  }
-
+function normalizeArray(value: JsonArray, schema: ConfigSchemaNode): JsonArray {
   if (schema.items === undefined) {
-    return value as JsonArray;
+    return value;
   }
 
   return value.map((item) => normalizeWithSchema(item, schema.items as ConfigSchemaNode));
