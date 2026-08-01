@@ -17,9 +17,13 @@ const CLOSE_SELECTORS = [
 export class OverlayHandler implements PreparationStep {
   readonly name = 'overlay-handler';
 
+  constructor(
+    private readonly beforeClickDelay?: () => Promise<number>,
+  ) {}
+
   async run(page: Page): Promise<PreparationStepResult> {
     const start = Date.now();
-    const matched = await clickFirstMatch(page, CLOSE_SELECTORS);
+    const matched = await clickFirstMatch(page, CLOSE_SELECTORS, undefined, this.beforeClickDelay);
     return {
       name: this.name,
       executed: true,

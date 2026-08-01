@@ -18,9 +18,13 @@ const COOKIE_SELECTORS = [
 export class CookieHandler implements PreparationStep {
   readonly name = 'cookie-handler';
 
+  constructor(
+    private readonly beforeClickDelay?: () => Promise<number>,
+  ) {}
+
   async run(page: Page): Promise<PreparationStepResult> {
     const start = Date.now();
-    const matched = await clickFirstMatch(page, COOKIE_SELECTORS);
+    const matched = await clickFirstMatch(page, COOKIE_SELECTORS, undefined, this.beforeClickDelay);
     return {
       name: this.name,
       executed: true,
