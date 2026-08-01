@@ -9,6 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ## [0.2.0] — Em progresso
 
 ### Added
+- `Config`: módulo global com `config.json`, schema validável, defaults automáticos e serviço de leitura/escrita via DI para consumo desacoplado pelos módulos
 - `ManifestBuilder`: consolidação de `parseSite()` + `extractMetadata()` em um `site.json` validado e extensível
 - `SiteParser`: extração de title, description, language, headings, paragraphs, links e images via cheerio
 - `MetadataExtractor`: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)

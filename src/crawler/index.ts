@@ -15,7 +15,7 @@ import {
 import { validateUrl, extractDomain } from '../utils/url-validator';
 import { generateTimestamp } from '../utils/time';
 import { ensureDir, buildSessionDir } from '../filesystem';
-import { LOGS_DIR, OUTPUT_DIR } from '../config';
+import { GlobalConfig, GlobalConfigService, JsonFileConfigService } from '../config';
 import { createBrowserSession } from './browser';
 import { loadPage } from './page-loader';
 import { captureScreenshot } from './screenshot';
@@ -26,13 +26,19 @@ import { extractBranding } from '../branding-extractor';
 import { extractContacts } from '../contact-extractor';
 import { buildSiteManifest, saveSiteManifest } from '../manifest-builder';
 
-function buildConfig(rawUrl: string): CrawlerConfig {
+function buildConfig(rawUrl: string, globalConfig: GlobalConfig): CrawlerConfig {
   const url = validateUrl(rawUrl);
   const domain = extractDomain(url);
   const timestamp = generateTimestamp();
-  const outputDir = buildSessionDir(OUTPUT_DIR, domain, timestamp);
+  const outputDir = buildSessionDir(globalConfig.storage.outputDir, domain, timestamp);
 
-  return { url: url.toString(), domain, timestamp, outputDir, logsDir: LOGS_DIR };
+  return {
+    url: url.toString(),
+    domain,
+    timestamp,
+    outputDir,
+    logsDir: globalConfig.storage.logsDir,
+  };
 }
 
 function setupSession(config: CrawlerConfig): void {
@@ -106,8 +112,12 @@ async function executeCrawl(
   }
 }
 
-export async function runCrawler(rawUrl: string): Promise<CrawlerResult> {
-  const config = buildConfig(rawUrl);
+export async function runCrawler(
+  rawUrl: string,
+  configService: GlobalConfigService = new JsonFileConfigService(),
+): Promise<CrawlerResult> {
+  const globalConfig = await configService.read();
+  const config = buildConfig(rawUrl, globalConfig);
 
   setupSession(config);
 
