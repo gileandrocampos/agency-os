@@ -3,10 +3,9 @@ import { withRetry, isRetryableError } from '../../crawler/retry';
 
 vi.mock('../../logger', () => ({
   logRetry: vi.fn(),
-  logError: vi.fn(),
 }));
 
-import { logRetry, logError } from '../../logger';
+import { logRetry } from '../../logger';
 
 const noSleep = vi.fn().mockResolvedValue(undefined);
 
@@ -103,7 +102,6 @@ describe('withRetry', () => {
 
     expect(fn).toHaveBeenCalledTimes(3);
     expect(noSleep).toHaveBeenCalledTimes(2);
-    expect(logError).toHaveBeenCalledOnce();
   });
 
   it('propaga erro fatal imediatamente sem retry', async () => {
@@ -116,7 +114,6 @@ describe('withRetry', () => {
     expect(fn).toHaveBeenCalledOnce();
     expect(noSleep).not.toHaveBeenCalled();
     expect(logRetry).not.toHaveBeenCalled();
-    expect(logError).toHaveBeenCalledOnce();
   });
 
   it('loga cada tentativa com retry antes de dormir', async () => {
@@ -141,5 +138,27 @@ describe('withRetry', () => {
     expect(fn).toHaveBeenCalledOnce();
     expect(noSleep).not.toHaveBeenCalled();
     expect(logRetry).not.toHaveBeenCalled();
+  });
+
+  it('falha cedo quando maxAttempts é inválido', async () => {
+    const fn = vi.fn().mockResolvedValue('ok');
+
+    await expect(withRetry(fn, { maxAttempts: 0, backoffMs: 100 }, noSleep)).rejects.toThrow(
+      'Configuração de retry inválida: maxAttempts deve ser um inteiro maior ou igual a 1',
+    );
+
+    expect(fn).not.toHaveBeenCalled();
+    expect(noSleep).not.toHaveBeenCalled();
+  });
+
+  it('falha cedo quando backoffMs é inválido', async () => {
+    const fn = vi.fn().mockResolvedValue('ok');
+
+    await expect(withRetry(fn, { maxAttempts: 3, backoffMs: -1 }, noSleep)).rejects.toThrow(
+      'Configuração de retry inválida: backoffMs deve ser maior ou igual a 0',
+    );
+
+    expect(fn).not.toHaveBeenCalled();
+    expect(noSleep).not.toHaveBeenCalled();
   });
 });

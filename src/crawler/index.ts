@@ -11,7 +11,6 @@ import {
   logSave,
   logSuccess,
   logError,
-  logRetry,
 } from '../logger';
 import { validateUrl, extractDomain } from '../utils/url-validator';
 import { generateTimestamp } from '../utils/time';
