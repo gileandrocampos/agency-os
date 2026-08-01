@@ -13,6 +13,22 @@ Regras específicas de cada módulo estão em `.github/instructions/*.instructio
 
 ---
 
+## Invariantes arquiteturais
+
+Estas regras valem em **qualquer** módulo do projeto — não apenas nos módulos Shared:
+
+- **Nunca usar `console.log` direto** fora de `src/logger/`. Toda escrita de log deve passar pelo
+  `Logger` (`logInfo`, `logError`, etc.). Violações são bugs de logging, não preferências de estilo.
+- **Módulos Shared** (`src/logger/`, `src/utils/`, `src/types/`, `src/config.ts`) podem ser
+  importados por qualquer camada. Os demais módulos (Crawler, Parser, extractors, output) **não
+  devem importar uns aos outros diretamente** — a orquestração é sempre feita via injeção de
+  dependência no nível superior (`crawl-site.usecase.ts` / `Crawler`).
+- **Módulos Shared não podem importar** de `src/crawler/`, `src/parser/`, `src/branding-extractor/`,
+  `src/contact-extractor/`, `src/manifest-builder/`, ou `src/filesystem/`. Qualquer dependência
+  circular nessa direção é um erro de arquitetura.
+
+---
+
 ## Idioma
 
 | Contexto | Idioma |

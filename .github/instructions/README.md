@@ -25,6 +25,7 @@ sempre são tocados juntos numa mesma feature:
 | `extraction.instructions.md` | `src/parser/**`, `src/branding-extractor/**`, `src/contact-extractor/**` | Parser, BrandingExtractor, ContactExtractor, MetadataExtractor |
 | `output.instructions.md` | `src/manifest-builder/**`, `src/filesystem/**` | ManifestBuilder, FileSystem |
 | `shared.instructions.md` | `src/logger/**`, `src/utils/**`, `src/types/**`, `src/config.ts` | Logger, Utils, Types, Config |
+| `testing.instructions.md` | `src/__tests__/**` | Padrões de teste: mocks, `vi.hoisted`, lifecycle, asserts |
 
 ## Quando editar o quê
 
