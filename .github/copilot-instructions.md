@@ -6,6 +6,27 @@ Agency OS é um crawler local em TypeScript que recebe uma URL, renderiza a pág
 
 Stack: Node.js · TypeScript estrito · Playwright · Vitest · tsx (esbuild)
 
+Este arquivo cobre apenas regras universais, aplicadas em qualquer arquivo do repo.
+Regras específicas de cada módulo estão em `.github/instructions/*.instructions.md`
+(carregam automaticamente quando o Copilot trabalha em arquivos daquele módulo — ver
+`.github/instructions/README.md` para o mapa completo).
+
+---
+
+## Invariantes arquiteturais
+
+Estas regras valem em **qualquer** módulo do projeto — não apenas nos módulos Shared:
+
+- **Nunca usar `console.log` direto** fora de `src/logger/`. Toda escrita de log deve passar pelo
+  `Logger` (`logInfo`, `logError`, etc.). Violações são bugs de logging, não preferências de estilo.
+- **Módulos Shared** (`src/logger/`, `src/utils/`, `src/types/`, `src/config.ts`) podem ser
+  importados por qualquer camada. Os demais módulos (Crawler, Parser, extractors, output) **não
+  devem importar uns aos outros diretamente** — a orquestração é sempre feita via injeção de
+  dependência no nível superior (`crawl-site.usecase.ts` / `Crawler`).
+- **Módulos Shared não podem importar** de `src/crawler/`, `src/parser/`, `src/branding-extractor/`,
+  `src/contact-extractor/`, `src/manifest-builder/`, ou `src/filesystem/`. Qualquer dependência
+  circular nessa direção é um erro de arquitetura.
+
 ---
 
 ## Idioma
@@ -69,31 +90,6 @@ async function executeCrawl(
 
 ---
 
-## Arquitetura — Módulos e responsabilidades
-
-| Módulo | Localização | Responsabilidade |
-|---|---|---|
-| CLI | `src/cli/` | Ponto de entrada: parseia args e delega ao Crawler |
-| Application | `src/crawl-site.usecase.ts` | a ponte entre CLI e domínio |
-| Crawler | `src/crawler/index.ts` | Orquestra o fluxo completo de uma sessão |
-| Browser | `src/crawler/browser.ts` | Cria e fecha sessão Playwright |
-| PageLoader | `src/crawler/page-loader.ts` | Navega para a URL e aguarda `networkidle` |
-| PagePreparer | `src/crawler/page-preparer/` | Pipeline de preparação antes da captura |
-| Screenshot | `src/crawler/screenshot.ts` | Captura fullpage por viewport |
-| HtmlSaver | `src/crawler/html-saver.ts` | Salva HTML renderizado em disco |
-| Parser | `src/parser/index.ts` | Extrai dados estruturados do HTML |
-| BrandingExtractor | `src/branding-extractor/` | Logo, cores, fontes, tema, componentes |
-| ContactExtractor | `src/contact-extractor/` | Telefone, WhatsApp, e-mail, endereço, redes sociais |
-| MetadataExtractor | `src/parser/metadata-extractor.ts` | Metadados do `<head>` |
-| ManifestBuilder | `src/manifest-builder/` | Consolida tudo em `site.json` |
-| FileSystem | `src/filesystem/index.ts` | Cria diretórios e constrói caminhos de sessão |
-| Logger | `src/logger/index.ts` | Logs prefixados com timestamp (console + arquivo) |
-| Utils | `src/utils/` | Funções puras: validação de URL, domínio, timestamp |
-| Types | `src/types/` | Interfaces e constantes compartilhadas |
-| Config | `src/config.ts` | Paths globais (`LOGS_DIR`, `OUTPUT_DIR`) |
-
----
-
 ## Scripts
 
 | Script | Comando | Descrição |
@@ -112,36 +108,15 @@ Nova ideia → Branch → Implementar → Testes → Documentação → Safe-Cra
 ```
 
 - **Antes de qualquer código:** entender objetivo e escopo. Perguntar se a tarefa for ambígua.
-- **Branch:** criar automaticamente via `git checkout -b <tipo>/<descricao-kebab-case>`, a partir da `main` atualizada (`git pull origin main`). Não esperar o usuário pedir.
+- **Branch:** criar automaticamente via `git checkout -b <tipo>/<descricao-kebab-case>`, a partir da `main` atualizada. Não esperar o usuário pedir.
 - **Implementação:** restrita ao escopo definido. Mudanças fora do escopo → sinalizar, não fazer.
-- **Testes:** toda `feat`, `fix` ou `refactor` exige testes cobrindo happy path, bordas e erros. Não avançar com testes falhando.
+- **Testes:** toda `feat`, `fix` ou `refactor` exige testes cobrindo happy path, bordas e erros.
 - **Safe-crawl:** executar antes do merge. Nenhum merge sem safe-crawl aprovado.
 - **Merge:** via Pull Request para `main`. Nunca push direto. Branches `spike/*` exigem revisão humana explícita.
 - **Pular etapa:** se o usuário pedir, obedecer mas alertar o risco.
 
----
-
-## Convenção de branches
-
-```
-<tipo>/<descricao-kebab-case>
-```
-
-Minúsculo, sem acentos, sem underscores, 2–5 palavras. Com issue: `feat/seo-analyzer-123`.
-
-| Tipo | Quando usar |
-|---|---|
-| `feat` | Nova funcionalidade |
-| `fix` | Correção de bug |
-| `refactor` | Refatoração sem mudança de comportamento |
-| `docs` | Apenas documentação |
-| `test` | Criação/ajuste de testes |
-| `chore` | Manutenção (deps, configs, build) |
-| `perf` | Melhoria de performance |
-| `spike` | Experimentação — nunca merge sem revisão humana |
-| `hotfix` | Correção urgente de produção |
-
-**Regra:** criar a branch de fato (`git checkout -b ...`), não apenas sugerir o nome.
+Tipos de branch: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `spike` (nunca merge sem revisão humana), `hotfix`.
+Formato: `<tipo>/<descricao-kebab-case>`, minúsculo, sem acentos/underscores, 2–5 palavras.
 
 ---
 

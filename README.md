@@ -4,7 +4,7 @@
 
 ## O que faz
 
-A partir de uma URL, o Freelance OS:
+A partir de uma URL, o Agency OS:
 
 - Captura **screenshot desktop e mobile** da página
 - Salva o **HTML completo** renderizado
