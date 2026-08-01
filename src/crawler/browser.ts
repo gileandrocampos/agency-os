@@ -32,18 +32,27 @@ export async function createBrowserSession(config: BrowserSessionConfig = DEFAUL
     headless: config.headless,
     slowMo: config.slowMoMs,
   });
-  const contextOptions = buildContextOptions(config);
-  const context = await browser.newContext(contextOptions);
-  const page = await context.newPage();
-  assertBrowserPageContract(page);
 
-  return {
-    page,
-    close: async () => {
-      await context.close();
-      await browser.close();
-    },
-  };
+  try {
+    const contextOptions = buildContextOptions(config);
+    const context = await browser.newContext(contextOptions);
+    const page = await context.newPage();
+    assertBrowserPageContract(page);
+
+    return {
+      page,
+      close: async () => {
+        try {
+          await context.close();
+        } finally {
+          await browser.close();
+        }
+      },
+    };
+  } catch (error) {
+    await browser.close();
+    throw error;
+  }
 }
 
 function assertBrowserPageContract(page: unknown): asserts page is Page {

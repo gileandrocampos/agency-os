@@ -1,3 +1,4 @@
+import type { Page } from 'playwright';
 import { CrawlerConfig, CrawlerResult, DESKTOP_VIEWPORT, MOBILE_VIEWPORT } from '../types';
 import {
   initLogger,
@@ -55,6 +56,13 @@ interface CrawlerExecutionOptions {
   antiBot: AntiBotRuntimeConfig;
 }
 
+interface SessionArtifacts {
+  desktopPath: string;
+  mobilePath: string;
+  htmlPath: string;
+  html: string;
+}
+
 function buildConfig(url: URL, globalConfig: GlobalConfig): CrawlerConfig {
   const domain = extractDomain(url);
   const timestamp = generateTimestamp();
@@ -75,6 +83,69 @@ function setupSession(config: CrawlerConfig): void {
   ensureDir(config.outputDir);
 }
 
+async function openSession(executionOptions: CrawlerExecutionOptions) {
+  logBrowser('Abrindo navegador');
+  return createBrowserSession({
+    headless: executionOptions.headless,
+    slowMoMs: executionOptions.slowMoMs,
+    antiBot: {
+      enabled: executionOptions.antiBot.enabled,
+      rotateFingerprint: executionOptions.antiBot.rotateFingerprint,
+      fingerprints: executionOptions.antiBot.fingerprints,
+    },
+  });
+}
+
+async function maybeDetectChallenge(
+  page: Page,
+  config: CrawlerConfig,
+  executionOptions: CrawlerExecutionOptions,
+): Promise<boolean> {
+  const challenge = await detectChallenge(page, executionOptions.antiBot.challengeDetection);
+  if (challenge === null) {
+    return false;
+  }
+  const detail = `Bloqueio anti-bot detectado em ${config.domain} (${config.timestamp}) - tipo: ${challenge.type}; padrão: ${challenge.matchedPattern}; origem: ${challenge.source}`;
+  logError(detail);
+  if (executionOptions.antiBot.blockMetrics.enabled) {
+    safeRecordDomainBlock(config, challenge.type, executionOptions);
+  }
+  return true;
+}
+
+async function captureArtifacts(page: Page, config: CrawlerConfig): Promise<SessionArtifacts> {
+  logScreenshot('Capturando Desktop');
+  const desktopPath = await captureScreenshot(page, DESKTOP_VIEWPORT, config.outputDir);
+  logScreenshot('Capturando Mobile');
+  const mobilePath = await captureScreenshot(page, MOBILE_VIEWPORT, config.outputDir);
+  const html = await page.content();
+  logSave('Salvando HTML');
+  const htmlPath = await saveHtml(html, config.outputDir);
+  return { desktopPath, mobilePath, htmlPath, html };
+}
+
+async function buildAndPersistManifest(page: Page, config: CrawlerConfig, artifacts: SessionArtifacts) {
+  const branding = await extractBranding(page);
+  const metadata = extractMetadata(artifacts.html);
+  const parsedSite = parseSite(artifacts.html, config.url);
+  const contacts = extractContacts({ html: artifacts.html, baseUrl: config.url });
+  const siteManifest = buildSiteManifest({
+    url: config.url,
+    domain: config.domain,
+    timestamp: config.timestamp,
+    outputDir: config.outputDir,
+    htmlFile: artifacts.htmlPath,
+    screenshotDesktop: artifacts.desktopPath,
+    screenshotMobile: artifacts.mobilePath,
+    parsedSite,
+    metadata,
+    branding,
+    contacts,
+  });
+  const siteJsonFile = await saveSiteManifest(siteManifest, config.outputDir);
+  return { siteManifest, siteJsonFile, parsedSite, branding, contacts };
+}
+
 async function executeCrawl(
   config: CrawlerConfig,
   executionOptions: CrawlerExecutionOptions,
@@ -85,29 +156,14 @@ async function executeCrawl(
 
   const delayBeforeAction = createHumanizedDelay(executionOptions.antiBot.humanizedDelay);
   const preparer = new PagePreparationService(undefined, undefined, delayBeforeAction);
-
-  logBrowser('Abrindo navegador');
-  const session = await createBrowserSession({
-    headless: executionOptions.headless,
-    slowMoMs: executionOptions.slowMoMs,
-    antiBot: {
-      enabled: executionOptions.antiBot.enabled,
-      rotateFingerprint: executionOptions.antiBot.rotateFingerprint,
-      fingerprints: executionOptions.antiBot.fingerprints,
-    },
-  });
+  const session = await openSession(executionOptions);
 
   try {
     logPage(`Carregando página: ${config.url}`);
     await loadPage(session.page, config.url, delayBeforeAction);
 
-    const challenge = await detectChallenge(session.page, executionOptions.antiBot.challengeDetection);
-    if (challenge !== null) {
-      const detail = `Bloqueio anti-bot detectado em ${config.domain} (${config.timestamp}) - tipo: ${challenge.type}; padrão: ${challenge.matchedPattern}; origem: ${challenge.source}`;
-      logError(detail);
-      if (executionOptions.antiBot.blockMetrics.enabled) {
-        safeRecordDomainBlock(config, challenge.type, executionOptions);
-      }
+    const isBlocked = await maybeDetectChallenge(session.page, config, executionOptions);
+    if (isBlocked) {
       return null;
     }
 
@@ -116,44 +172,15 @@ async function executeCrawl(
     prepResult.warnings.forEach((w) => logError(`Aviso preparação: ${w}`));
     logSuccess(`Página preparada em ${prepResult.totalDurationMs}ms`);
 
-    logScreenshot('Capturando Desktop');
-    const desktopPath = await captureScreenshot(session.page, DESKTOP_VIEWPORT, config.outputDir);
-
-    logScreenshot('Capturando Mobile');
-    const mobilePath = await captureScreenshot(session.page, MOBILE_VIEWPORT, config.outputDir);
-
-    const html = await session.page.content();
-
-    logSave('Salvando HTML');
-    const htmlPath = await saveHtml(html, config.outputDir);
-
-    const branding = await extractBranding(session.page);
-
-    const metadata = extractMetadata(html);
-    const parsedSite = parseSite(html, config.url);
-    const contacts = extractContacts({ html, baseUrl: config.url });
-    const siteManifest = buildSiteManifest({
-      url: config.url,
-      domain: config.domain,
-      timestamp: config.timestamp,
-      outputDir: config.outputDir,
-      htmlFile: htmlPath,
-      screenshotDesktop: desktopPath,
-      screenshotMobile: mobilePath,
-      parsedSite,
-      metadata,
-      branding,
-      contacts,
-    });
-
-    const siteJsonFile = await saveSiteManifest(siteManifest, config.outputDir);
+    const artifacts = await captureArtifacts(session.page, config);
+    const { siteManifest, siteJsonFile, parsedSite, branding, contacts } = await buildAndPersistManifest(session.page, config, artifacts);
 
     return {
       url: config.url,
       outputDir: config.outputDir,
-      screenshotDesktop: desktopPath,
-      screenshotMobile: mobilePath,
-      htmlFile: htmlPath,
+      screenshotDesktop: artifacts.desktopPath,
+      screenshotMobile: artifacts.mobilePath,
+      htmlFile: artifacts.htmlPath,
       siteJsonFile,
       siteManifest,
       parsedSite,

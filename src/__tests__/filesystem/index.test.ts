@@ -122,4 +122,36 @@ describe('filesystem', () => {
       expect(writtenJson).toContain('"lastChallengeType": "cloudflare"');
     });
   });
+
+  describe('readDomainMetrics (via recordDomainAttempt)', () => {
+    it('trata JSON com número como store vazio e inicia nova entrada', () => {
+      existsSyncMock.mockReturnValue(true);
+      readFileSyncMock.mockReturnValue('42');
+
+      recordDomainAttempt('/logs', 'example.com', '2026-08-01_11-00-00');
+
+      const writtenJson = String(writeFileSyncMock.mock.calls[0][1]);
+      expect(writtenJson).toContain('"attempts": 1');
+    });
+
+    it('trata JSON com array como store vazio e inicia nova entrada', () => {
+      existsSyncMock.mockReturnValue(true);
+      readFileSyncMock.mockReturnValue('[]');
+
+      recordDomainAttempt('/logs', 'example.com', '2026-08-01_11-00-00');
+
+      const writtenJson = String(writeFileSyncMock.mock.calls[0][1]);
+      expect(writtenJson).toContain('"attempts": 1');
+    });
+
+    it('trata JSON com null como store vazio e inicia nova entrada', () => {
+      existsSyncMock.mockReturnValue(true);
+      readFileSyncMock.mockReturnValue('null');
+
+      recordDomainAttempt('/logs', 'example.com', '2026-08-01_11-00-00');
+
+      const writtenJson = String(writeFileSyncMock.mock.calls[0][1]);
+      expect(writtenJson).toContain('"attempts": 1');
+    });
+  });
 });

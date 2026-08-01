@@ -80,7 +80,11 @@ function readDomainMetrics(logsDir: string, fileName: string): DomainBlockMetric
 
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(content) as DomainBlockMetricStore;
+    const parsed: unknown = JSON.parse(content);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return {};
+    }
+    return parsed as DomainBlockMetricStore;
   } catch {
     return {};
   }

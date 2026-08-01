@@ -110,4 +110,19 @@ describe('createBrowserSession', () => {
 
     await expect(createBrowserSession()).rejects.toThrow('Sessão inválida: contrato da página não é compatível com o crawler');
   });
+
+  it('fecha browser quando ocorre erro durante a criação da sessão', async () => {
+    mockContext.newPage.mockResolvedValueOnce({});
+
+    await expect(createBrowserSession()).rejects.toThrow();
+    expect(mockBrowser.close).toHaveBeenCalledOnce();
+  });
+
+  it('close() chama browser.close() mesmo quando context.close() falha', async () => {
+    mockContext.close.mockRejectedValueOnce(new Error('falha ao fechar contexto'));
+
+    const session = await createBrowserSession();
+    await expect(session.close()).rejects.toThrow('falha ao fechar contexto');
+    expect(mockBrowser.close).toHaveBeenCalledOnce();
+  });
 });
