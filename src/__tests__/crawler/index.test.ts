@@ -182,6 +182,10 @@ const {
       logging: {},
       terminal: {},
       integrations: {},
+      retry: {
+        maxAttempts: 1,
+        backoffMs: 0,
+      },
     }),
     write: vi.fn(),
   };
@@ -247,6 +251,7 @@ vi.mock('../../logger', () => ({
   logSuccess: vi.fn(),
   logPrepare: vi.fn(),
   logError: vi.fn(),
+  logRetry: vi.fn(),
 }));
 
 vi.mock('../../filesystem', () => ({
@@ -268,6 +273,10 @@ describe('runCrawler', () => {
       logging: {},
       terminal: {},
       integrations: {},
+      retry: {
+        maxAttempts: 1,
+        backoffMs: 0,
+      },
     });
     (captureScreenshot as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce('/out/screenshot-desktop.png')

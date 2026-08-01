@@ -62,6 +62,10 @@ export function logPrepare(message: string): void {
   print(`⚙️  ${message}`);
 }
 
+export function logRetry(message: string): void {
+  print(`🔄 ${message}`);
+}
+
 export function logError(message: string, error?: unknown): void {
   const line = formatLine(`❌ ${message}`);
   console.error(line);
