@@ -16,6 +16,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 - `Navigation Extractor`: extração de menu principal, links de footer e classificação de links internos/externos em formato serializável
 - `BrandingExtractor`: extração tipada de logo, favicon, paleta de cores, fontes, biblioteca de ícones, framework CSS, tema, espaçamentos, border radius, componentes e padrões de botões
 - `ContactExtractor`: extração tipada e deduplicada de telefones, WhatsApp, e-mails, endereço, redes sociais, Google Maps, horários, formulários, CTAs de contato e múltiplas unidades
+- `Crawler Anti-Bot`: integração com Patchright como driver, rotação configurável de fingerprint (UA + viewport + platform), delay humanizado reutilizável em navegação/cliques/scroll, detecção de challenge/CAPTCHA sem derrubar execução e persistência de métricas por domínio em JSON (`logs/block-metrics.json`)
 
 ---
 

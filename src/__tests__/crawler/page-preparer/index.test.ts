@@ -75,7 +75,20 @@ describe('PagePreparationService', () => {
   it('passa scrollDelay e maxScrollSteps para ScrollActivator', () => {
     const config = { ...DEFAULT_PREPARATION_CONFIG, scrollDelay: 500, maxScrollSteps: 10 };
     new PagePreparationService(config);
-    expect(ScrollActivator).toHaveBeenCalledWith(500, 10);
+    expect(ScrollActivator).toHaveBeenCalledWith(500, 10, undefined);
+  });
+
+  it('injeta callback de delay nos handlers interativos', () => {
+    const beforeInteractionDelay = vi.fn().mockResolvedValue(300);
+    new PagePreparationService(DEFAULT_PREPARATION_CONFIG, undefined, beforeInteractionDelay);
+
+    expect(CookieHandler).toHaveBeenCalledWith(beforeInteractionDelay);
+    expect(OverlayHandler).toHaveBeenCalledWith(beforeInteractionDelay);
+    expect(ScrollActivator).toHaveBeenCalledWith(
+      DEFAULT_PREPARATION_CONFIG.scrollDelay,
+      DEFAULT_PREPARATION_CONFIG.maxScrollSteps,
+      beforeInteractionDelay,
+    );
   });
 
   it('não instancia ScrollActivator quando scrollActivation é false', () => {
