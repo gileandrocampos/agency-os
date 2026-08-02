@@ -95,7 +95,8 @@ async function executeCrawl(
 | Script | Comando | Descrição |
 |---|---|---|
 | `npm run crawl <url>` | `tsx src/cli/index.ts crawl` | Executa o crawler |
-| `npm run safe-crawl <url>` | `npm test && npm run crawl` | Roda testes; aborta se algum falhar |
+| `npm run queue -- queue:<sub>` | `tsx src/cli/index.ts` | Comandos de fila (`queue:add`, `queue:run`, `queue:list`, `queue:status`) |
+| `npm run safe-queue` | `npm test && npm run queue -- queue:run` | Roda testes; aborta se algum falhar, depois processa a fila |
 | `npm run test` | `vitest run` | Suite de testes |
 | `npm run test:coverage` | `vitest run --coverage` | Testes com cobertura |
 
@@ -104,14 +105,14 @@ async function executeCrawl(
 ## Fluxo de desenvolvimento obrigatório
 
 ```
-Nova ideia → Branch → Implementar → Testes → Documentação → Safe-Crawl → PR → Merge → Excluir branch
+Nova ideia → Branch → Implementar → Testes → Documentação → Safe-Queue → PR → Merge → Excluir branch
 ```
 
 - **Antes de qualquer código:** entender objetivo e escopo. Perguntar se a tarefa for ambígua.
 - **Branch:** criar automaticamente via `git checkout -b <tipo>/<descricao-kebab-case>`, a partir da `main` atualizada. Não esperar o usuário pedir.
 - **Implementação:** restrita ao escopo definido. Mudanças fora do escopo → sinalizar, não fazer.
 - **Testes:** toda `feat`, `fix` ou `refactor` exige testes cobrindo happy path, bordas e erros.
-- **Safe-crawl:** executar antes do merge. Nenhum merge sem safe-crawl aprovado.
+- **Safe-queue:** executar antes do merge. Nenhum merge sem safe-queue aprovado.
 - **Merge:** via Pull Request para `main`. Nunca push direto. Branches `spike/*` exigem revisão humana explícita.
 - **Pular etapa:** se o usuário pedir, obedecer mas alertar o risco.
 

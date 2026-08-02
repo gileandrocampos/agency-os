@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { registerCrawlCommand } from './commands/crawl.command';
+import { registerQueueCommands } from './commands/register-queue.commands';
 
 const program = new Command();
 
@@ -10,4 +11,5 @@ program
   .version('0.1.0');
 
 registerCrawlCommand(program);
+registerQueueCommands(program);
 program.parseAsync(process.argv);

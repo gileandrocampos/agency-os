@@ -67,7 +67,8 @@ Logs (logs/execution.log)
 | Script | Comando | Descrição |
 |---|---|---|
 | `npm run crawl` | `npm run crawl <url>` | Executa o crawler diretamente |
-| `npm run safe-crawl` | `npm run safe-crawl <url>` | Roda testes primeiro; aborta se algum falhar |
+| `npm run queue` | `npm run queue -- queue:<sub> [args]` | Comandos de fila (`add`, `run`, `list`, `status`) |
+| `npm run safe-queue` | `npm test && npm run queue -- queue:run` | Roda testes primeiro; se passarem, processa a fila |
 | `npm run test` | `vitest run` | Executa a suite de testes |
 | `npm run test:coverage` | `vitest run --coverage` | Executa testes com relatório de cobertura |
 

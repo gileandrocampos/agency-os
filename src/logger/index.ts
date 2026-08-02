@@ -1,7 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const state: { logFilePath: string | null } = { logFilePath: null };
+const state: { logFilePath: string | null; silent: boolean } = {
+  logFilePath: null,
+  silent: false,
+};
 
 function currentTimestamp(): string {
   return new Date().toISOString();
@@ -16,10 +19,14 @@ function writeToFile(line: string): void {
   fs.appendFileSync(state.logFilePath, line + '\n', 'utf-8');
 }
 
+export function setSilent(value: boolean): void {
+  state.silent = value;
+}
+
 function print(message: string): void {
   const line = formatLine(message);
-  console.log(line);
-  writeToFile(line);
+  if (!state.silent) console.log(line);
+  writeToFile(line); // sempre grava, silencioso ou não
 }
 
 export function initLogger(logsDir: string): void {
@@ -66,9 +73,15 @@ export function logRetry(message: string): void {
   print(`🔄 ${message}`);
 }
 
+export function logQueue(message: string): void {
+  const line = formatLine(message);
+  console.log(line);
+  writeToFile(line);
+}
+
 export function logError(message: string, error?: unknown): void {
   const line = formatLine(`❌ ${message}`);
-  console.error(line);
+  if (!state.silent) console.error(line);
   writeToFile(line);
 
   if (error instanceof Error && error.stack) {

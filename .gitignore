@@ -7,6 +7,9 @@ dist/
 # Saída do crawler (dados gerados localmente)
 output/
 
+# Queue Storage
+data/
+
 # Logs
 logs/
 *.log
