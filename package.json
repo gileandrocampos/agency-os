@@ -11,18 +11,21 @@
     "start": "tsx src/cli/index.ts",
     "dev": "tsx src/cli/index.ts",
     "crawl": "tsx src/cli/index.ts crawl",
-    "safe-crawl": "npm test && npm run crawl",
+    "queue": "tsx src/cli/index.ts",
+    "safe-queue": "npm test && npm run queue -- queue:run",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "better-sqlite3": "^12.11.1",
     "cheerio": "^1.2.0",
     "commander": "^15.0.0",
     "patchright": "^1.61.1",
     "playwright": "^1.40.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^4.1.9",
     "tsx": "^4.0.0",

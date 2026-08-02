@@ -54,7 +54,10 @@ Os logs ficam em `logs/`.
 | Comando | Descrição |
 |---|---|
 | `npm run crawl <url>` | Executa o crawler |
-| `npm run safe-crawl <url>` | Roda os testes antes; aborta se algum falhar |
+| `npm run queue -- queue:add <urls...>` | Enfileira uma ou mais URLs |
+| `npm run queue -- queue:run` | Processa todos os jobs pendentes |
+| `npm run queue -- queue:list` | Lista os jobs da fila |
+| `npm run safe-queue` | Roda os testes antes; aborta se algum falhar, depois processa a fila |
 | `npm test` | Roda os testes |
 | `npm run test:coverage` | Roda os testes com cobertura |
 | `npm run build` | Compila o TypeScript |
