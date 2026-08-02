@@ -5,7 +5,7 @@ vi.mock('../../queue', () => ({
 }));
 
 import { enqueue } from '../../queue';
-import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecases';
+import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecase';
 
 describe('enqueueSitesUseCase', () => {
   beforeEach(() => {

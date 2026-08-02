@@ -120,6 +120,20 @@ describe('getNext', () => {
 
     expect(getNext()).toBeNull();
   });
+
+  it('prioriza outros pendentes antes de reprocessar um retry recente', () => {
+    const first = enqueue({ url: 'https://first.com', max_attempts: 3 });
+    enqueue({ url: 'https://second.com' });
+    if (!first.created) return;
+
+    const running = getNext();
+    if (!running) return;
+    markFailed(running.id, 'timeout');
+
+    const next = getNext();
+    expect(next).not.toBeNull();
+    expect(next!.url).toBe('https://second.com');
+  });
 });
 
 describe('markDone', () => {

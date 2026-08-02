@@ -1,5 +1,4 @@
 import { getNext, markDone, markFailed, countPending } from './queue';
-import { runCrawler } from '../crawler';
 import { setSilent, logQueue } from '../logger';
 import type { Job } from './types';
 
@@ -10,11 +9,16 @@ function formatResult(index: number, total: number, job: Job, status: 'done' | '
   return `[${index}/${total}] ${job.url} ... ${icon} ${status}${suffix} (${seconds}s)`;
 }
 
-async function processJob(job: Job, index: number, total: number): Promise<boolean> {
+async function processJob(
+  job: Job,
+  index: number,
+  total: number,
+  runCrawl: (url: string) => Promise<unknown>,
+): Promise<boolean> {
   const start = Date.now();
 
   try {
-    await runCrawler(job.url);
+    await runCrawl(job.url);
     markDone(job.id);
     logQueue(formatResult(index, total, job, 'done', Date.now() - start));
     return true;
@@ -26,7 +30,7 @@ async function processJob(job: Job, index: number, total: number): Promise<boole
   }
 }
 
-export async function processQueue(): Promise<void> {
+export async function processQueue(runCrawl: (url: string) => Promise<unknown>): Promise<void> {
   const total = countPending();
   if (total === 0) {
     logQueue('Nenhum job pendente na fila.');
@@ -43,7 +47,7 @@ export async function processQueue(): Promise<void> {
     let job = getNext();
     while (job) {
       index++;
-      const ok = await processJob(job, index, total);
+      const ok = await processJob(job, index, total, runCrawl);
       if (ok) succeeded++; else failed++;
       job = getNext();
     }

@@ -1,4 +1,5 @@
-// scripts/reset-queue.ts
 import { db } from '../src/queue/storage';
+import { logQueue } from '../src/logger';
+
 db.exec('DELETE FROM jobs');
-console.log('Fila limpa.');
+logQueue('Fila limpa.');

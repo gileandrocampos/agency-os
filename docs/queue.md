@@ -17,8 +17,8 @@ A fila é armazenada em `data/queue.db` (ignorada pelo `.gitignore`).
 ## Interface pública (`src/queue/index.ts`)
 
 ```ts
-import { enqueue, list, getNext, markDone, markFailed, countPending, findByUrl, processQueue } from './queue';
-import type { Job, JobStatus } from './queue';
+import { enqueue, list, getNext, markDone, markFailed, countPending, findByUrl, processQueue } from '../src/queue';
+import type { Job, JobStatus } from '../src/queue';
 ```
 
 ---
@@ -122,7 +122,7 @@ Processa todos os jobs pendentes em sequência:
 
 1. Conta os pendentes com `countPending()`
 2. Ativa modo silencioso no logger (`setSilent(true)`) para suprimir os logs individuais de cada crawl
-3. Itera com `getNext()` → `runCrawler()` → `markDone()` ou `markFailed()`
+3. Itera com `getNext()` → executor de crawl injetado (`runQueueUseCase` passa `runCrawler`) → `markDone()` ou `markFailed()`
 4. Restaura o logger (`setSilent(false)`) no bloco `finally`
 5. Exibe resumo final via `logQueue()`
 
@@ -160,7 +160,7 @@ npm run safe-queue
 ```
 markFailed(id, msg)
   └─ attempts + 1 < max_attempts?
-       ├─ sim → status = 'pending'   (será reprocessado no próximo queue:run)
+       ├─ sim → status = 'pending'   (pode ser reprocessado na execução atual ou no próximo queue:run)
        └─ não → status = 'failed'    (encerrado com erro)
 ```
 

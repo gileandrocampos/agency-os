@@ -4,7 +4,12 @@ vi.mock('../../queue', () => ({
   processQueue: vi.fn(),
 }));
 
+vi.mock('../../crawler', () => ({
+  runCrawler: vi.fn(),
+}));
+
 import { processQueue } from '../../queue';
+import { runCrawler } from '../../crawler';
 import { runQueueUseCase } from '../../application/run-queue.usecase';
 
 describe('runQueueUseCase', () => {
@@ -12,12 +17,13 @@ describe('runQueueUseCase', () => {
     vi.clearAllMocks();
   });
 
-  it('delega para processQueue sem argumentos', async () => {
+  it('delega para processQueue com o executor de crawl', async () => {
     (processQueue as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
     await runQueueUseCase();
 
     expect(processQueue).toHaveBeenCalledOnce();
+    expect(processQueue).toHaveBeenCalledWith(runCrawler);
   });
 
   it('propaga erros lançados por processQueue', async () => {
