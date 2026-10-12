@@ -1,6 +1,18 @@
-import { getNext, markDone, markFailed, countPending } from './queue';
+import {
+  getNext,
+  markDone,
+  markFailed,
+  countPending,
+  recoverRunningJobs,
+  refreshRunningJobLease,
+  RUNNING_JOB_LEASE_MS,
+} from './queue';
 import { setSilent, logQueue } from '../logger';
 import type { Job } from './types';
+
+export interface QueueJobExecutor {
+  execute(job: Job): Promise<void>;
+}
 
 function formatResult(index: number, total: number, job: Job, status: 'done' | 'failed', durationMs: number, reason?: string): string {
   const icon = status === 'done' ? '✅' : '❌';
@@ -10,15 +22,20 @@ function formatResult(index: number, total: number, job: Job, status: 'done' | '
 }
 
 async function processJob(
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
   job: Job,
   index: number,
   total: number,
-  runCrawl: (url: string) => Promise<unknown>,
 ): Promise<boolean> {
   const start = Date.now();
+  const heartbeat = setInterval(() => refreshRunningJobLease(job.id), RUNNING_JOB_LEASE_MS / 3);
 
   try {
-    await runCrawl(job.url);
+    if (typeof executor === 'function') {
+      await executor(job.url);
+    } else {
+      await executor.execute(job);
+    }
     markDone(job.id);
     logQueue(formatResult(index, total, job, 'done', Date.now() - start));
     return true;
@@ -27,10 +44,19 @@ async function processJob(
     markFailed(job.id, message);
     logQueue(formatResult(index, total, job, 'failed', Date.now() - start, message));
     return false;
+  } finally {
+    clearInterval(heartbeat);
   }
 }
 
-export async function processQueue(runCrawl: (url: string) => Promise<unknown>): Promise<void> {
+export async function processQueue(
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
+): Promise<void> {
+  const recoveredJobs = recoverRunningJobs();
+  if (recoveredJobs > 0) {
+    logQueue(`${recoveredJobs} job(s) em running foram reencaminhados para pending.`);
+  }
+
   const total = countPending();
   if (total === 0) {
     logQueue('Nenhum job pendente na fila.');
@@ -47,7 +73,7 @@ export async function processQueue(runCrawl: (url: string) => Promise<unknown>):
     let job = getNext();
     while (job) {
       index++;
-      const ok = await processJob(job, index, total, runCrawl);
+      const ok = await processJob(executor, job, index, total);
       if (ok) succeeded++; else failed++;
       job = getNext();
     }

@@ -25,3 +25,17 @@ db.exec(`
     updated_at    TEXT NOT NULL
   )
 `);
+
+function hasColumn(tableName: string, columnName: string): boolean {
+  const columns = db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
+  return columns.some((column) => column.name === columnName);
+}
+
+function ensureColumn(tableName: string, columnName: string, definition: string): void {
+  if (!hasColumn(tableName, columnName)) {
+    db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+  }
+}
+
+ensureColumn('jobs', 'priority', "TEXT NOT NULL DEFAULT 'normal'");
+ensureColumn('jobs', 'config_json', 'TEXT');

@@ -22,6 +22,22 @@ describe('enqueueSitesUseCase', () => {
     expect(enqueue).toHaveBeenCalledWith({ url: 'https://b.com' });
   });
 
+  it('repassa prioridade e máximo de tentativas para cada URL', () => {
+    (enqueue as ReturnType<typeof vi.fn>).mockReturnValue({ created: true, job: {} });
+
+    enqueueSitesUseCase({
+      urls: ['https://a.com'],
+      priority: 'high',
+      max_attempts: 3,
+    });
+
+    expect(enqueue).toHaveBeenCalledWith({
+      url: 'https://a.com',
+      priority: 'high',
+      max_attempts: 3,
+    });
+  });
+
   it('retorna o resultado de cada enqueue na mesma ordem', () => {
     const resultA = { created: true, job: { url: 'https://a.com' } };
     const resultB = { created: false, reason: 'duplicate', existingJob: { url: 'https://b.com' } };

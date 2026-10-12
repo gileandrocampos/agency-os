@@ -9,7 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ## [0.2.0] — Em progresso
 
 ### Added
-- `Queue`: fila persistente em SQLite (`better-sqlite3`) com suporte a enqueue, list, status, retry automático e processamento sequencial via `queue:add`, `queue:run`, `queue:list` e `queue:status`
+- `Queue`: hardening para próxima etapa de multi-browser com prioridade por job (`low/normal/high`), config específica por job, recuperação automática de jobs `running` após restart, executor injetável no consumer (`QueueJobExecutor`) e reprocessamento manual via `queue:retry`
 - `Config`: módulo global com `config.json`, schema validável, defaults automáticos e serviço de leitura/escrita via DI para consumo desacoplado pelos módulos
 - `ManifestBuilder`: consolidação de `parseSite()` + `extractMetadata()` em um `site.json` validado e extensível
 - `SiteParser`: extração de title, description, language, headings, paragraphs, links e images via cheerio

@@ -17,8 +17,19 @@ A fila é armazenada em `data/queue.db` (ignorada pelo `.gitignore`).
 ## Interface pública (`src/queue/index.ts`)
 
 ```ts
-import { enqueue, list, getNext, markDone, markFailed, countPending, findByUrl, processQueue } from '../src/queue';
-import type { Job, JobStatus } from '../src/queue';
+import {
+  enqueue,
+  list,
+  getNext,
+  markDone,
+  markFailed,
+  recoverRunningJobs,
+  retryFailedByUrl,
+  countPending,
+  findByUrl,
+  processQueue,
+} from '../src/queue';
+import type { CrawlJobConfig, Job, JobPriority, JobStatus, QueueJobExecutor } from '../src/queue';
 ```
 
 ---
@@ -38,6 +49,8 @@ type JobStatus = 'pending' | 'running' | 'done' | 'failed';
 | `id`            | `string`         | UUID gerado automaticamente                           |
 | `url`           | `string`         | URL a ser crawleada (única na tabela)                 |
 | `company_name`  | `string \| null` | Nome da empresa (opcional)                            |
+| `priority`      | `'low' \| 'normal' \| 'high'` | Prioridade para ordenação no consumo                  |
+| `config`        | `CrawlJobConfig \| null` | Configurações de execução específicas do job          |
 | `status`        | `JobStatus`      | Estado atual do job                                   |
 | `attempts`      | `number`         | Quantidade de tentativas realizadas                   |
 | `max_attempts`  | `number`         | Limite de tentativas antes de marcar como `failed`    |
@@ -59,6 +72,8 @@ Adiciona uma URL à fila. Se a URL já existir, retorna o job existente sem cria
 |-----------------|----------|--------|-------------------------|
 | `url`           | `string` | —      | URL a enfileirar        |
 | `company_name`  | `string` | `null` | Nome da empresa         |
+| `priority`      | `JobPriority` | `normal` | Prioridade do job     |
+| `config`        | `CrawlJobConfig` | `null` | Config específica do job |
 | `max_attempts`  | `number` | `1`    | Máximo de tentativas    |
 
 **Retorno:**
@@ -84,7 +99,7 @@ list({ status: 'pending' })  // só pendentes
 
 ### `getNext(): Job | null`
 
-Retorna o job pendente mais antigo e o marca como `running`. Retorna `null` se não houver pendentes. A atualização de status é feita atomicamente para evitar processamento duplicado.
+Retorna o próximo job pendente ordenado por `attempts` crescente, prioridade (`high` → `normal` → `low`), `updated_at` crescente e, por fim, `created_at` crescente. O job é marcado como `running` de forma atômica.
 
 ---
 
@@ -102,6 +117,18 @@ Lança `Error` se o `id` não existir.
 
 ---
 
+### `recoverRunningJobs(): number`
+
+Reencaminha para `pending` apenas jobs `running` sem renovação de lease nos últimos cinco minutos (útil em restart após crash). Retorna quantidade de jobs recuperados.
+
+---
+
+### `retryFailedByUrl(url: string): boolean`
+
+Move um job `failed` para `pending`, reseta `attempts` e limpa `error`. Retorna `true` quando houve atualização.
+
+---
+
 ### `countPending(): number`
 
 Retorna o total de jobs com status `pending`.
@@ -116,15 +143,18 @@ Busca um job pela URL. Retorna `undefined` se não encontrado.
 
 ## Consumer (`consumer.ts`)
 
-### `processQueue(): Promise<void>`
+### `processQueue(executor): Promise<void>`
 
 Processa todos os jobs pendentes em sequência:
 
-1. Conta os pendentes com `countPending()`
-2. Ativa modo silencioso no logger (`setSilent(true)`) para suprimir os logs individuais de cada crawl
-3. Itera com `getNext()` → executor de crawl injetado (`runQueueUseCase` passa `runCrawler`) → `markDone()` ou `markFailed()`
-4. Restaura o logger (`setSilent(false)`) no bloco `finally`
-5. Exibe resumo final via `logQueue()`
+1. Recupera jobs `running` com lease expirado via `recoverRunningJobs()`
+2. Conta os pendentes com `countPending()`
+3. Ativa modo silencioso no logger (`setSilent(true)`) para suprimir logs individuais de crawl
+4. Itera com `getNext()` → `executor.execute(job)` → `markDone()` ou `markFailed()`, renovando o lease do job durante a execução
+5. Restaura o logger (`setSilent(false)`) no bloco `finally`
+6. Exibe resumo final via `logQueue()`
+
+`executor` é injetável via interface `QueueJobExecutor` ou função que recebe a URL, permitindo reutilizar a fila com diferentes executores.
 
 ---
 
@@ -132,16 +162,20 @@ Processa todos os jobs pendentes em sequência:
 
 | Comando                              | Descrição                              |
 |--------------------------------------|----------------------------------------|
-| `queue:add <urls...>`                | Enfileira uma ou mais URLs             |
+| `queue:add [--priority] [--max-attempts] <urls...>` | Enfileira URLs com prioridade e tentativas |
 | `queue:run`                          | Processa todos os jobs pendentes       |
 | `queue:list [-s <status>]`           | Lista os jobs (com filtro opcional)    |
 | `queue:status <url>`                 | Exibe o detalhe de um job pela URL     |
+| `queue:retry <url>`                  | Reencaminha um job `failed` para `pending` |
 
 **Fluxo recomendado:**
 
 ```bash
 # 1. Adicionar URLs na fila
 npm run queue -- queue:add https://exemplo.com https://outro.com
+
+# 1.1) Enfileirar com prioridade alta e até 3 tentativas
+npm run queue -- queue:add --priority high --max-attempts 3 https://exemplo.com
 
 # 2. Verificar a fila
 npm run queue -- queue:list
@@ -177,6 +211,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   id            TEXT PRIMARY KEY,
   url           TEXT NOT NULL UNIQUE,
   company_name  TEXT,
+  priority      TEXT NOT NULL DEFAULT 'normal',
+  config_json   TEXT,
   status        TEXT NOT NULL DEFAULT 'pending',
   attempts      INTEGER DEFAULT 0,
   max_attempts  INTEGER DEFAULT 1,
