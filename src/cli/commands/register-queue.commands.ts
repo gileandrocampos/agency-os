@@ -7,10 +7,13 @@ import type { JobPriority, JobStatus } from '../../queue';
 import { findByUrl, list, retryFailedByUrl } from '../../queue';
 
 function parsePriority(input?: string): JobPriority {
-  if (input === 'low' || input === 'normal' || input === 'high') {
+  if (input === undefined || input === 'normal') {
+    return 'normal';
+  }
+  if (input === 'low' || input === 'high') {
     return input;
   }
-  return 'normal';
+  throw new Error('A prioridade deve ser low, normal ou high.');
 }
 
 function parseMaxAttempts(input?: string): number {
@@ -34,8 +37,8 @@ export function registerQueueCommands(program: Command): void {
     .option('-m, --max-attempts <number>', 'máximo de tentativas por job', '1')
     .argument('<urls...>', 'URLs a enfileirar')
     .action((urls: string[], options: { priority?: string; maxAttempts?: string }) => {
-      const priority = parsePriority(options.priority);
       try {
+        const priority = parsePriority(options.priority);
         const maxAttempts = parseMaxAttempts(options.maxAttempts);
         const results = enqueueSitesUseCase({ urls, priority, max_attempts: maxAttempts });
         const created = results.filter((r) => r.created).length;
@@ -45,7 +48,7 @@ export function registerQueueCommands(program: Command): void {
         );
       } catch (error) {
         logError('Falha ao adicionar URLs na fila', error);
-        printError('Não foi possível enfileirar as URLs informadas.');
+        printError(error instanceof Error ? error.message : 'Não foi possível enfileirar as URLs informadas.');
         process.exitCode = 1;
       }
     });

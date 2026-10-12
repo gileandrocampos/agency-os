@@ -28,7 +28,7 @@ vi.mock('../../logger', () => ({
 import { runQueueUseCase } from '../../application/run-queue.usecase';
 import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecase';
 import { retryFailedByUrl } from '../../queue';
-import { printInfo, printSuccess } from '../../cli/output/printer';
+import { printError, printInfo, printSuccess } from '../../cli/output/printer';
 import { registerQueueCommands } from '../../cli/commands/register-queue.commands';
 
 function createProgram(): Command {
@@ -70,6 +70,23 @@ describe('CLI - comandos de queue', () => {
     expect(printSuccess).toHaveBeenCalledWith(
       expect.stringContaining('1 job(s) criado(s), 1 já existiam.'),
     );
+  });
+
+  it('rejeita prioridade inválida com mensagem descritiva', async () => {
+    const program = createProgram();
+    await program.parseAsync([
+      'node',
+      'script',
+      'queue:add',
+      '--priority',
+      'urgent',
+      'https://a.com',
+    ]);
+
+    expect(enqueueSitesUseCase).not.toHaveBeenCalled();
+    expect(printError).toHaveBeenCalledWith('A prioridade deve ser low, normal ou high.');
+    expect(process.exitCode).toBe(1);
+    process.exitCode = undefined;
   });
 
   it('delega o comando queue:run para runQueueUseCase', async () => {

@@ -14,6 +14,8 @@ export type EnqueueResult =
   | { created: true; job: Job }
   | { created: false; reason: 'duplicate'; existingJob: Job };
 
+export const RUNNING_JOB_LEASE_MS = 5 * 60 * 1000;
+
 interface RawJob {
   id: string;
   url: string;
@@ -68,6 +70,33 @@ function loadJobByUrl(url: string): Job | undefined {
   return job ? mapRawJob(job) : undefined;
 }
 
+function insertJob(input: EnqueueInput, id: string, now: string, priority: JobPriority, configJson: string | null): void {
+  db.prepare(`
+    INSERT INTO jobs (
+      id,
+      url,
+      company_name,
+      priority,
+      config_json,
+      status,
+      attempts,
+      max_attempts,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?)
+  `).run(
+    id,
+    input.url,
+    input.company_name ?? null,
+    priority,
+    configJson,
+    input.max_attempts ?? 1,
+    now,
+    now,
+  );
+}
+
 export function enqueue(input: EnqueueInput): EnqueueResult {
   const now = new Date().toISOString();
   const id = randomUUID();
@@ -75,30 +104,7 @@ export function enqueue(input: EnqueueInput): EnqueueResult {
   const configJson = input.config ? JSON.stringify(input.config) : null;
 
   try {
-    db.prepare(`
-      INSERT INTO jobs (
-        id,
-        url,
-        company_name,
-        priority,
-        config_json,
-        status,
-        attempts,
-        max_attempts,
-        created_at,
-        updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, 'pending', 0, ?, ?, ?)
-    `).run(
-      id,
-      input.url,
-      input.company_name ?? null,
-      priority,
-      configJson,
-      input.max_attempts ?? 1,
-      now,
-      now,
-    );
+    insertJob(input, id, now, priority, configJson);
 
     const job: Job = {
       id,
@@ -198,13 +204,22 @@ export function markFailed(id: string, errorMessage: string): void {
 
 export function recoverRunningJobs(): number {
   const now = new Date().toISOString();
+  const staleBefore = new Date(Date.now() - RUNNING_JOB_LEASE_MS).toISOString();
   const result = db.prepare(`
     UPDATE jobs
     SET status = 'pending', updated_at = ?
-    WHERE status = 'running'
-  `).run(now);
+    WHERE status = 'running' AND updated_at < ?
+  `).run(now, staleBefore);
 
   return result.changes;
+}
+
+export function refreshRunningJobLease(id: string): void {
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE jobs SET updated_at = ?
+    WHERE id = ? AND status = 'running'
+  `).run(now, id);
 }
 
 export function retryFailedByUrl(url: string): boolean {

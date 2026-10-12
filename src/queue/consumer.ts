@@ -1,16 +1,17 @@
-import { getNext, markDone, markFailed, countPending, recoverRunningJobs } from './queue';
-import { runCrawler } from '../crawler';
+import {
+  getNext,
+  markDone,
+  markFailed,
+  countPending,
+  recoverRunningJobs,
+  refreshRunningJobLease,
+  RUNNING_JOB_LEASE_MS,
+} from './queue';
 import { setSilent, logQueue } from '../logger';
 import type { Job } from './types';
 
 export interface QueueJobExecutor {
   execute(job: Job): Promise<void>;
-}
-
-class CrawlerQueueExecutor implements QueueJobExecutor {
-  async execute(job: Job): Promise<void> {
-    await runCrawler(job.url);
-  }
 }
 
 function formatResult(index: number, total: number, job: Job, status: 'done' | 'failed', durationMs: number, reason?: string): string {
@@ -27,6 +28,7 @@ async function processJob(
   total: number,
 ): Promise<boolean> {
   const start = Date.now();
+  const heartbeat = setInterval(() => refreshRunningJobLease(job.id), RUNNING_JOB_LEASE_MS / 3);
 
   try {
     if (typeof executor === 'function') {
@@ -42,11 +44,13 @@ async function processJob(
     markFailed(job.id, message);
     logQueue(formatResult(index, total, job, 'failed', Date.now() - start, message));
     return false;
+  } finally {
+    clearInterval(heartbeat);
   }
 }
 
 export async function processQueue(
-  executor: QueueJobExecutor | ((url: string) => Promise<unknown>) = new CrawlerQueueExecutor(),
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
 ): Promise<void> {
   const recoveredJobs = recoverRunningJobs();
   if (recoveredJobs > 0) {
