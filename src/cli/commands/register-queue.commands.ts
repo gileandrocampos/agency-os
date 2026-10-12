@@ -1,22 +1,47 @@
 // src/cli/commands/register-queue-commands.ts
 import { Command } from 'commander';
-import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecases';
 import { runQueueUseCase } from '../../application/run-queue.usecase';
 import { printError, printInfo, printSuccess } from '../output/printer';
 import { logError } from '../../logger';
-import type { JobStatus } from '../../queue';
-import { findByUrl, list } from '../../queue';
+import type { JobPriority, JobStatus } from '../../queue';
+import { enqueue, findByUrl, list, retryFailedByUrl } from '../../queue';
+
+function parsePriority(input?: string): JobPriority {
+  if (input === 'low' || input === 'normal' || input === 'high') {
+    return input;
+  }
+  return 'normal';
+}
+
+function parseMaxAttempts(input?: string): number {
+  if (!input) {
+    return 1;
+  }
+
+  const parsed = Number(input);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error('max-attempts deve ser um inteiro maior ou igual a 1');
+  }
+
+  return parsed;
+}
 
 export function registerQueueCommands(program: Command): void {
   program
     .command('queue:add')
     .description('Adiciona uma ou mais URLs na fila de crawl')
+    .option('-p, --priority <priority>', 'prioridade do job (low, normal, high)', 'normal')
+    .option('-m, --max-attempts <number>', 'máximo de tentativas por job', '1')
     .argument('<urls...>', 'URLs a enfileirar')
-    .action((urls: string[]) => {
-      const results = enqueueSitesUseCase({ urls });
+    .action((urls: string[], options: { priority?: string; maxAttempts?: string }) => {
+      const priority = parsePriority(options.priority);
+      const maxAttempts = parseMaxAttempts(options.maxAttempts);
+      const results = urls.map((url) => enqueue({ url, priority, max_attempts: maxAttempts }));
       const created = results.filter((r) => r.created).length;
       const duplicates = results.length - created;
-      printSuccess(`${created} job(s) criado(s), ${duplicates} já existiam.`);
+      printSuccess(
+        `${created} job(s) criado(s), ${duplicates} já existiam. Prioridade: ${priority}. Tentativas: ${maxAttempts}.`,
+      );
     });
 
   program
@@ -65,9 +90,25 @@ export function registerQueueCommands(program: Command): void {
 
           printInfo(`URL:        ${job.url}`);
           printInfo(`Status:     ${job.status}`);
+          printInfo(`Prioridade: ${job.priority}`);
           printInfo(`Tentativas: ${job.attempts}/${job.max_attempts}`);
           printInfo(`Criado em:  ${job.created_at}`);
           printInfo(`Atualizado: ${job.updated_at}`);
           if (job.error) printInfo(`Erro:       ${job.error}`);
+        });
+
+      program
+        .command('queue:retry')
+        .description('Reprocessa um job com status failed usando a URL')
+        .argument('<url>', 'URL do job')
+        .action((url: string) => {
+          const requeued = retryFailedByUrl(url);
+
+          if (!requeued) {
+            printInfo('Nenhum job failed encontrado para essa URL.');
+            return;
+          }
+
+          printSuccess('Job reencaminhado para pending com tentativas resetadas.');
         });
 }

@@ -4,6 +4,7 @@ vi.mock('../../queue/queue', () => ({
   getNext: vi.fn(),
   markDone: vi.fn(),
   markFailed: vi.fn(),
+  recoverRunningJobs: vi.fn(),
   countPending: vi.fn(),
 }));
 
@@ -16,17 +17,19 @@ vi.mock('../../logger', () => ({
   logQueue: vi.fn(),
 }));
 
-import { getNext, markDone, markFailed, countPending } from '../../queue/queue';
+import { getNext, markDone, markFailed, recoverRunningJobs, countPending } from '../../queue/queue';
 import { runCrawler } from '../../crawler';
 import { setSilent, logQueue } from '../../logger';
 import { processQueue } from '../../queue/consumer';
-import type { Job } from '../../queue/types';
+import type { Job, QueueJobExecutor } from '../../queue';
 
 function makeJob(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job-1',
     url: 'https://example.com',
     company_name: null,
+    priority: 'normal',
+    config: null,
     status: 'pending',
     attempts: 0,
     max_attempts: 1,
@@ -43,6 +46,7 @@ describe('processQueue', () => {
   });
 
   it('encerra imediatamente quando não há jobs pendentes', async () => {
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(0);
 
     await processQueue();
@@ -52,6 +56,7 @@ describe('processQueue', () => {
   });
 
   it('ativa o modo silencioso durante o processamento e restaura ao final', async () => {
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(makeJob()).mockReturnValue(null);
     (runCrawler as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
@@ -64,6 +69,7 @@ describe('processQueue', () => {
 
   it('chama markDone e loga sucesso quando o crawl é bem-sucedido', async () => {
     const job = makeJob();
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
     (runCrawler as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
@@ -76,6 +82,7 @@ describe('processQueue', () => {
 
   it('chama markFailed e loga falha quando o crawl lança erro', async () => {
     const job = makeJob();
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
     (runCrawler as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('timeout'));
@@ -89,6 +96,7 @@ describe('processQueue', () => {
   it('processa múltiplos jobs em sequência e exibe o resumo correto', async () => {
     const job1 = makeJob({ id: 'job-1', url: 'https://a.com' });
     const job2 = makeJob({ id: 'job-2', url: 'https://b.com' });
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(2);
     (getNext as ReturnType<typeof vi.fn>)
       .mockReturnValueOnce(job1)
@@ -112,6 +120,7 @@ describe('processQueue', () => {
 
   it('restaura o modo silencioso mesmo quando um job lança exceção inesperada', async () => {
     const job = makeJob();
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
     (runCrawler as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('crash'));
@@ -119,5 +128,29 @@ describe('processQueue', () => {
     await processQueue();
 
     expect(setSilent).toHaveBeenCalledWith(false);
+  });
+
+  it('loga recuperação de jobs running antes de iniciar o loop', async () => {
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(2);
+    (countPending as ReturnType<typeof vi.fn>).mockReturnValue(0);
+
+    await processQueue();
+
+    expect(logQueue).toHaveBeenCalledWith('2 job(s) em running foram reencaminhados para pending.');
+  });
+
+  it('permite injetar executor customizado sem chamar runCrawler', async () => {
+    const job = makeJob();
+    const execute = vi.fn().mockResolvedValue(undefined);
+    const executor: QueueJobExecutor = { execute };
+
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
+    (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
+    (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
+
+    await processQueue(executor);
+
+    expect(execute).toHaveBeenCalledWith(job);
+    expect(runCrawler).not.toHaveBeenCalled();
   });
 });

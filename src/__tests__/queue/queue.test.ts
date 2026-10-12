@@ -9,6 +9,8 @@ const { testDb } = vi.hoisted(() => {
       id            TEXT PRIMARY KEY,
       url           TEXT NOT NULL UNIQUE,
       company_name  TEXT,
+      priority      TEXT NOT NULL DEFAULT 'normal',
+      config_json   TEXT,
       status        TEXT NOT NULL DEFAULT 'pending',
       attempts      INTEGER DEFAULT 0,
       max_attempts  INTEGER DEFAULT 1,
@@ -22,7 +24,17 @@ const { testDb } = vi.hoisted(() => {
 
 vi.mock('../../queue/storage', () => ({ db: testDb }));
 
-import { enqueue, list, getNext, markDone, markFailed, countPending, findByUrl } from '../../queue/queue';
+import {
+  enqueue,
+  list,
+  getNext,
+  markDone,
+  markFailed,
+  recoverRunningJobs,
+  retryFailedByUrl,
+  countPending,
+  findByUrl,
+} from '../../queue/queue';
 
 describe('enqueue', () => {
   beforeEach(() => {
@@ -36,19 +48,29 @@ describe('enqueue', () => {
     if (!result.created) return;
     expect(result.job.url).toBe('https://example.com');
     expect(result.job.status).toBe('pending');
+    expect(result.job.priority).toBe('normal');
+    expect(result.job.config).toBeNull();
     expect(result.job.attempts).toBe(0);
     expect(result.job.max_attempts).toBe(1);
     expect(result.job.company_name).toBeNull();
     expect(result.job.error).toBeNull();
   });
 
-  it('persiste company_name e max_attempts informados', () => {
-    const result = enqueue({ url: 'https://example.com', company_name: 'Acme', max_attempts: 3 });
+  it('persiste company_name, max_attempts, prioridade e config informados', () => {
+    const result = enqueue({
+      url: 'https://example.com',
+      company_name: 'Acme',
+      max_attempts: 3,
+      priority: 'high',
+      config: { timeoutMs: 10_000 },
+    });
 
     expect(result.created).toBe(true);
     if (!result.created) return;
     expect(result.job.company_name).toBe('Acme');
     expect(result.job.max_attempts).toBe(3);
+    expect(result.job.priority).toBe('high');
+    expect(result.job.config).toEqual({ timeoutMs: 10_000 });
   });
 
   it('retorna created: false com o job existente em caso de URL duplicada', () => {
@@ -114,6 +136,15 @@ describe('getNext', () => {
     expect(job!.status).toBe('running');
   });
 
+  it('prioriza jobs high antes dos demais', () => {
+    enqueue({ url: 'https://low.com', priority: 'low' });
+    enqueue({ url: 'https://high.com', priority: 'high' });
+
+    const job = getNext();
+    expect(job).not.toBeNull();
+    expect(job!.url).toBe('https://high.com');
+  });
+
   it('não retorna o mesmo job duas vezes consecutivas', () => {
     enqueue({ url: 'https://only.com' });
     getNext();
@@ -168,6 +199,51 @@ describe('markFailed', () => {
 
   it('lança erro quando o id não existe', () => {
     expect(() => markFailed('id-inexistente', 'erro')).toThrow('id-inexistente');
+  });
+});
+
+describe('recoverRunningJobs', () => {
+  beforeEach(() => {
+    testDb.prepare('DELETE FROM jobs').run();
+  });
+
+  it('reencaminha jobs running para pending', () => {
+    const result = enqueue({ url: 'https://running.com' });
+    if (!result.created) return;
+
+    testDb.prepare("UPDATE jobs SET status = 'running' WHERE id = ?").run(result.job.id);
+
+    const recovered = recoverRunningJobs();
+    const job = findByUrl('https://running.com');
+
+    expect(recovered).toBe(1);
+    expect(job!.status).toBe('pending');
+  });
+});
+
+describe('retryFailedByUrl', () => {
+  beforeEach(() => {
+    testDb.prepare('DELETE FROM jobs').run();
+  });
+
+  it('reencaminha job failed para pending e reseta tentativas', () => {
+    const result = enqueue({ url: 'https://retry.com', max_attempts: 1 });
+    if (!result.created) return;
+
+    markFailed(result.job.id, 'timeout');
+    const changed = retryFailedByUrl('https://retry.com');
+    const job = findByUrl('https://retry.com');
+
+    expect(changed).toBe(true);
+    expect(job!.status).toBe('pending');
+    expect(job!.attempts).toBe(0);
+    expect(job!.error).toBeNull();
+  });
+
+  it('retorna false quando a URL não está em failed', () => {
+    enqueue({ url: 'https://done.com' });
+
+    expect(retryFailedByUrl('https://done.com')).toBe(false);
   });
 });
 

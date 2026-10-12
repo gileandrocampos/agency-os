@@ -1,7 +1,17 @@
-import { getNext, markDone, markFailed, countPending } from './queue';
+import { getNext, markDone, markFailed, countPending, recoverRunningJobs } from './queue';
 import { runCrawler } from '../crawler';
 import { setSilent, logQueue } from '../logger';
 import type { Job } from './types';
+
+export interface QueueJobExecutor {
+  execute(job: Job): Promise<void>;
+}
+
+class CrawlerQueueExecutor implements QueueJobExecutor {
+  async execute(job: Job): Promise<void> {
+    await runCrawler(job.url);
+  }
+}
 
 function formatResult(index: number, total: number, job: Job, status: 'done' | 'failed', durationMs: number, reason?: string): string {
   const icon = status === 'done' ? '✅' : '❌';
@@ -10,11 +20,16 @@ function formatResult(index: number, total: number, job: Job, status: 'done' | '
   return `[${index}/${total}] ${job.url} ... ${icon} ${status}${suffix} (${seconds}s)`;
 }
 
-async function processJob(job: Job, index: number, total: number): Promise<boolean> {
+async function processJob(
+  executor: QueueJobExecutor,
+  job: Job,
+  index: number,
+  total: number,
+): Promise<boolean> {
   const start = Date.now();
 
   try {
-    await runCrawler(job.url);
+    await executor.execute(job);
     markDone(job.id);
     logQueue(formatResult(index, total, job, 'done', Date.now() - start));
     return true;
@@ -26,7 +41,12 @@ async function processJob(job: Job, index: number, total: number): Promise<boole
   }
 }
 
-export async function processQueue(): Promise<void> {
+export async function processQueue(executor: QueueJobExecutor = new CrawlerQueueExecutor()): Promise<void> {
+  const recoveredJobs = recoverRunningJobs();
+  if (recoveredJobs > 0) {
+    logQueue(`${recoveredJobs} job(s) em running foram reencaminhados para pending.`);
+  }
+
   const total = countPending();
   if (total === 0) {
     logQueue('Nenhum job pendente na fila.');
@@ -43,7 +63,7 @@ export async function processQueue(): Promise<void> {
     let job = getNext();
     while (job) {
       index++;
-      const ok = await processJob(job, index, total);
+      const ok = await processJob(executor, job, index, total);
       if (ok) succeeded++; else failed++;
       job = getNext();
     }
