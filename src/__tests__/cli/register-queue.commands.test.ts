@@ -5,8 +5,11 @@ vi.mock('../../application/run-queue.usecase', () => ({
   runQueueUseCase: vi.fn(),
 }));
 
+vi.mock('../../application/enqueue-sites.usecase', () => ({
+  enqueueSitesUseCase: vi.fn(),
+}));
+
 vi.mock('../../queue', () => ({
-  enqueue: vi.fn(),
   list: vi.fn(),
   findByUrl: vi.fn(),
   retryFailedByUrl: vi.fn(),
@@ -23,7 +26,8 @@ vi.mock('../../logger', () => ({
 }));
 
 import { runQueueUseCase } from '../../application/run-queue.usecase';
-import { enqueue, retryFailedByUrl } from '../../queue';
+import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecase';
+import { retryFailedByUrl } from '../../queue';
 import { printInfo, printSuccess } from '../../cli/output/printer';
 import { registerQueueCommands } from '../../cli/commands/register-queue.commands';
 
@@ -40,9 +44,10 @@ describe('CLI - comandos de queue', () => {
   });
 
   it('cria jobs com prioridade e tentativas no comando queue:add', async () => {
-    (enqueue as ReturnType<typeof vi.fn>)
-      .mockReturnValueOnce({ created: true, job: { id: '1' } })
-      .mockReturnValueOnce({ created: false, reason: 'duplicate', existingJob: { id: '2' } });
+    (enqueueSitesUseCase as ReturnType<typeof vi.fn>).mockReturnValue([
+      { created: true, job: { id: '1' } },
+      { created: false, reason: 'duplicate', existingJob: { id: '2' } },
+    ]);
 
     const program = createProgram();
     await program.parseAsync([
@@ -57,9 +62,11 @@ describe('CLI - comandos de queue', () => {
       'https://b.com',
     ]);
 
-    expect(enqueue).toHaveBeenCalledTimes(2);
-    expect(enqueue).toHaveBeenCalledWith({ url: 'https://a.com', priority: 'high', max_attempts: 3 });
-    expect(enqueue).toHaveBeenCalledWith({ url: 'https://b.com', priority: 'high', max_attempts: 3 });
+    expect(enqueueSitesUseCase).toHaveBeenCalledWith({
+      urls: ['https://a.com', 'https://b.com'],
+      priority: 'high',
+      max_attempts: 3,
+    });
     expect(printSuccess).toHaveBeenCalledWith(
       expect.stringContaining('1 job(s) criado(s), 1 já existiam.'),
     );

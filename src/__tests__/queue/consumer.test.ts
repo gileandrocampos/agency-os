@@ -8,13 +8,13 @@ vi.mock('../../queue/queue', () => ({
   countPending: vi.fn(),
 }));
 
-vi.mock('../../crawler', () => ({
-  runCrawler: vi.fn(),
-}));
-
 vi.mock('../../logger', () => ({
   setSilent: vi.fn(),
   logQueue: vi.fn(),
+}));
+
+vi.mock('../../crawler', () => ({
+  runCrawler: vi.fn(),
 }));
 
 import { getNext, markDone, markFailed, recoverRunningJobs, countPending } from '../../queue/queue';
@@ -41,6 +41,8 @@ function makeJob(overrides: Partial<Job> = {}): Job {
 }
 
 describe('processQueue', () => {
+  const runCrawl = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -49,7 +51,7 @@ describe('processQueue', () => {
     (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(0);
 
-    await processQueue();
+    await processQueue(runCrawl);
 
     expect(logQueue).toHaveBeenCalledWith(expect.stringContaining('Nenhum job pendente'));
     expect(getNext).not.toHaveBeenCalled();
@@ -59,9 +61,9 @@ describe('processQueue', () => {
     (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(makeJob()).mockReturnValue(null);
-    (runCrawler as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    runCrawl.mockResolvedValue(undefined);
 
-    await processQueue();
+    await processQueue(runCrawl);
 
     expect(setSilent).toHaveBeenNthCalledWith(1, true);
     expect(setSilent).toHaveBeenNthCalledWith(2, false);
@@ -72,9 +74,9 @@ describe('processQueue', () => {
     (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
-    (runCrawler as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    runCrawl.mockResolvedValue(undefined);
 
-    await processQueue();
+    await processQueue(runCrawl);
 
     expect(markDone).toHaveBeenCalledWith(job.id);
     expect(logQueue).toHaveBeenCalledWith(expect.stringContaining('done'));
@@ -85,9 +87,9 @@ describe('processQueue', () => {
     (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
-    (runCrawler as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('timeout'));
+    runCrawl.mockRejectedValue(new Error('timeout'));
 
-    await processQueue();
+    await processQueue(runCrawl);
 
     expect(markFailed).toHaveBeenCalledWith(job.id, 'timeout');
     expect(logQueue).toHaveBeenCalledWith(expect.stringContaining('failed'));
@@ -102,18 +104,19 @@ describe('processQueue', () => {
       .mockReturnValueOnce(job1)
       .mockReturnValueOnce(job2)
       .mockReturnValue(null);
-    (runCrawler as ReturnType<typeof vi.fn>)
+    runCrawl
       .mockResolvedValueOnce(undefined)
       .mockRejectedValueOnce(new Error('erro'));
 
-    await processQueue();
+    await processQueue(runCrawl);
 
     expect(markDone).toHaveBeenCalledWith(job1.id);
     expect(markFailed).toHaveBeenCalledWith(job2.id, 'erro');
     const summaryCall = (logQueue as ReturnType<typeof vi.fn>).mock.calls.find(
-      ([msg]: [string]) => msg.includes('Fila processada'),
+      (args) => String(args[0]).includes('Fila processada'),
     );
     expect(summaryCall).toBeDefined();
+    if (!summaryCall) return;
     expect(summaryCall[0]).toContain('1 sucesso');
     expect(summaryCall[0]).toContain('1 falha');
   });
@@ -123,9 +126,9 @@ describe('processQueue', () => {
     (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
     (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
     (getNext as ReturnType<typeof vi.fn>).mockReturnValueOnce(job).mockReturnValue(null);
-    (runCrawler as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('crash'));
+    runCrawl.mockRejectedValue(new Error('crash'));
 
-    await processQueue();
+    await processQueue(runCrawl);
 
     expect(setSilent).toHaveBeenCalledWith(false);
   });

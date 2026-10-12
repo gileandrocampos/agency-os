@@ -17,8 +17,9 @@ export class PagePreparationService {
   constructor(
     config: PreparationConfig = DEFAULT_PREPARATION_CONFIG,
     steps?: PreparationStep[],
+    beforeInteractionDelay?: () => Promise<number>,
   ) {
-    this.steps = steps ?? this.buildSteps(config);
+    this.steps = steps ?? this.buildSteps(config, beforeInteractionDelay);
   }
 
   async prepare(page: Page): Promise<PreparationResult> {
@@ -42,21 +43,24 @@ export class PagePreparationService {
     };
   }
 
-  private buildSteps(config: PreparationConfig): PreparationStep[] {
+  private buildSteps(
+    config: PreparationConfig,
+    beforeInteractionDelay?: () => Promise<number>,
+  ): PreparationStep[] {
     const steps: PreparationStep[] = [];
 
     steps.push(new IdleWaiter(config.networkIdleTimeout));
 
     if (config.cookieDismiss) {
-      steps.push(new CookieHandler());
+      steps.push(new CookieHandler(beforeInteractionDelay));
     }
 
     if (config.overlayDismiss) {
-      steps.push(new OverlayHandler());
+      steps.push(new OverlayHandler(beforeInteractionDelay));
     }
 
     if (config.scrollActivation) {
-      steps.push(new ScrollActivator(config.scrollDelay, config.maxScrollSteps));
+      steps.push(new ScrollActivator(config.scrollDelay, config.maxScrollSteps, beforeInteractionDelay));
     }
 
     steps.push(new IdleWaiter(config.networkIdleTimeout));

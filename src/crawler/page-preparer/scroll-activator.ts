@@ -7,6 +7,7 @@ export class ScrollActivator implements PreparationStep {
   constructor(
     private readonly scrollDelay: number,
     private readonly maxScrollSteps: number,
+    private readonly beforeScrollDelay?: () => Promise<number>,
   ) {}
 
   async run(page: Page): Promise<PreparationStepResult> {
@@ -17,6 +18,10 @@ export class ScrollActivator implements PreparationStep {
       const steps = Math.min(Math.ceil(scrollHeight / viewportHeight), this.maxScrollSteps);
 
       for (let i = 1; i <= steps; i++) {
+        if (this.beforeScrollDelay !== undefined) {
+          await this.beforeScrollDelay();
+        }
+
         await page.evaluate((y) => window.scrollTo(0, y), i * viewportHeight);
         await new Promise<void>((resolve) => setTimeout(resolve, this.scrollDelay));
       }

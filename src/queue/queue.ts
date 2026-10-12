@@ -147,25 +147,27 @@ export function list(filter: ListFilter = {}): Job[] {
 
 export function getNext(): Job | null {
   const now = new Date().toISOString();
+  while (true) {
+    const job = db.prepare(`
+      SELECT * FROM jobs WHERE status = 'pending'
+      ORDER BY attempts ASC,
+        CASE priority WHEN 'high' THEN 3 WHEN 'normal' THEN 2 ELSE 1 END DESC,
+        updated_at ASC,
+        created_at ASC
+      LIMIT 1
+    `).get() as RawJob | undefined;
 
-  const job = db.prepare(`
-    SELECT * FROM jobs WHERE status = 'pending'
-    ORDER BY CASE priority WHEN 'high' THEN 3 WHEN 'normal' THEN 2 ELSE 1 END DESC, created_at ASC
-    LIMIT 1
-  `).get() as RawJob | undefined;
+    if (!job) return null;
 
-  if (!job) return null;
+    const result = db.prepare(`
+      UPDATE jobs SET status = 'running', updated_at = ?
+      WHERE id = ? AND status = 'pending'
+    `).run(now, job.id);
 
-  const result = db.prepare(`
-    UPDATE jobs SET status = 'running', updated_at = ?
-    WHERE id = ? AND status = 'pending'
-  `).run(now, job.id);
-
-  if (result.changes === 0) {
-    return getNext();
+    if (result.changes > 0) {
+      return mapRawJob({ ...job, status: 'running', updated_at: now });
+    }
   }
-
-  return mapRawJob({ ...job, status: 'running', updated_at: now });
 }
 
 export function markDone(id: string): void {

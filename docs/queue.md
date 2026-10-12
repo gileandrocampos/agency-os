@@ -28,8 +28,8 @@ import {
   countPending,
   findByUrl,
   processQueue,
-} from './queue';
-import type { CrawlJobConfig, Job, JobPriority, JobStatus, QueueJobExecutor } from './queue';
+} from '../src/queue';
+import type { CrawlJobConfig, Job, JobPriority, JobStatus, QueueJobExecutor } from '../src/queue';
 ```
 
 ---
@@ -154,7 +154,7 @@ Processa todos os jobs pendentes em sequência:
 5. Restaura o logger (`setSilent(false)`) no bloco `finally`
 6. Exibe resumo final via `logQueue()`
 
-`executor` é injetável via interface `QueueJobExecutor`, permitindo paralelização/distribuição futura sem acoplamento à implementação interna do crawler.
+`executor` é injetável via interface `QueueJobExecutor` ou função que recebe a URL, permitindo reutilizar a fila com diferentes executores.
 
 ---
 
@@ -194,7 +194,7 @@ npm run safe-queue
 ```
 markFailed(id, msg)
   └─ attempts + 1 < max_attempts?
-       ├─ sim → status = 'pending'   (será reprocessado no próximo queue:run)
+       ├─ sim → status = 'pending'   (pode ser reprocessado na execução atual ou no próximo queue:run)
        └─ não → status = 'failed'    (encerrado com erro)
 ```
 

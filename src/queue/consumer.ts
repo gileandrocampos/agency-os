@@ -21,7 +21,7 @@ function formatResult(index: number, total: number, job: Job, status: 'done' | '
 }
 
 async function processJob(
-  executor: QueueJobExecutor,
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
   job: Job,
   index: number,
   total: number,
@@ -29,7 +29,11 @@ async function processJob(
   const start = Date.now();
 
   try {
-    await executor.execute(job);
+    if (typeof executor === 'function') {
+      await executor(job.url);
+    } else {
+      await executor.execute(job);
+    }
     markDone(job.id);
     logQueue(formatResult(index, total, job, 'done', Date.now() - start));
     return true;
@@ -41,7 +45,9 @@ async function processJob(
   }
 }
 
-export async function processQueue(executor: QueueJobExecutor = new CrawlerQueueExecutor()): Promise<void> {
+export async function processQueue(
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>) = new CrawlerQueueExecutor(),
+): Promise<void> {
   const recoveredJobs = recoverRunningJobs();
   if (recoveredJobs > 0) {
     logQueue(`${recoveredJobs} job(s) em running foram reencaminhados para pending.`);

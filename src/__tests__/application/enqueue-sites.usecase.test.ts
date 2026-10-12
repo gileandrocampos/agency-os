@@ -5,7 +5,7 @@ vi.mock('../../queue', () => ({
 }));
 
 import { enqueue } from '../../queue';
-import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecases';
+import { enqueueSitesUseCase } from '../../application/enqueue-sites.usecase';
 
 describe('enqueueSitesUseCase', () => {
   beforeEach(() => {
@@ -20,6 +20,22 @@ describe('enqueueSitesUseCase', () => {
     expect(enqueue).toHaveBeenCalledTimes(2);
     expect(enqueue).toHaveBeenCalledWith({ url: 'https://a.com' });
     expect(enqueue).toHaveBeenCalledWith({ url: 'https://b.com' });
+  });
+
+  it('repassa prioridade e máximo de tentativas para cada URL', () => {
+    (enqueue as ReturnType<typeof vi.fn>).mockReturnValue({ created: true, job: {} });
+
+    enqueueSitesUseCase({
+      urls: ['https://a.com'],
+      priority: 'high',
+      max_attempts: 3,
+    });
+
+    expect(enqueue).toHaveBeenCalledWith({
+      url: 'https://a.com',
+      priority: 'high',
+      max_attempts: 3,
+    });
   });
 
   it('retorna o resultado de cada enqueue na mesma ordem', () => {
