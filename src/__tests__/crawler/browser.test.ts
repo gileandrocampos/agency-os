@@ -2,7 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createBrowserSession } from '../../crawler/browser';
 
 const { mockPage, mockContext, mockBrowser } = vi.hoisted(() => {
-  const mockPage = {};
+  const mockPage = {
+    goto: vi.fn(),
+    title: vi.fn(),
+    url: vi.fn(),
+    content: vi.fn(),
+    evaluate: vi.fn(),
+    locator: vi.fn(),
+    waitForLoadState: vi.fn(),
+    setViewportSize: vi.fn(),
+    screenshot: vi.fn(),
+  };
   const mockContext = {
     newPage: vi.fn().mockResolvedValue(mockPage),
     close: vi.fn().mockResolvedValue(undefined),
@@ -14,7 +24,7 @@ const { mockPage, mockContext, mockBrowser } = vi.hoisted(() => {
   return { mockPage, mockContext, mockBrowser };
 });
 
-vi.mock('playwright', () => ({
+vi.mock('patchright', () => ({
   chromium: {
     launch: vi.fn().mockResolvedValue(mockBrowser),
   },
@@ -42,9 +52,40 @@ describe('createBrowserSession', () => {
   });
 
   it('lança chromium com headless: true', async () => {
-    const { chromium } = await import('playwright');
+    const { chromium } = await import('patchright');
     await createBrowserSession();
     expect(chromium.launch).toHaveBeenCalledWith({ headless: false, slowMo: 500 });
+  });
+
+  it('aplica fingerprint no contexto quando anti-bot está habilitado', async () => {
+    await createBrowserSession({
+      headless: true,
+      slowMoMs: 0,
+      antiBot: {
+        enabled: true,
+        rotateFingerprint: false,
+        fingerprints: [
+          {
+            name: 'perfil-teste',
+            userAgent: 'Mozilla/5.0 Teste',
+            viewportWidth: 1280,
+            viewportHeight: 720,
+            platform: 'Windows',
+            locale: 'pt-BR',
+            acceptLanguage: 'pt-BR,pt;q=0.9',
+            isMobile: false,
+            hasTouch: false,
+            deviceScaleFactor: 1,
+          },
+        ],
+      },
+    });
+
+    expect(mockBrowser.newContext).toHaveBeenCalledWith(expect.objectContaining({
+      userAgent: 'Mozilla/5.0 Teste',
+      locale: 'pt-BR',
+      viewport: { width: 1280, height: 720 },
+    }));
   });
 
   it('close() chama context.close e browser.close', async () => {
@@ -62,5 +103,26 @@ describe('createBrowserSession', () => {
     const session = await createBrowserSession();
     await session.close();
     expect(callOrder).toEqual(['context', 'browser']);
+  });
+
+  it('lança erro quando página não implementa contrato mínimo esperado', async () => {
+    mockContext.newPage.mockResolvedValueOnce({});
+
+    await expect(createBrowserSession()).rejects.toThrow('Sessão inválida: contrato da página não é compatível com o crawler');
+  });
+
+  it('fecha browser quando ocorre erro durante a criação da sessão', async () => {
+    mockContext.newPage.mockResolvedValueOnce({});
+
+    await expect(createBrowserSession()).rejects.toThrow();
+    expect(mockBrowser.close).toHaveBeenCalledOnce();
+  });
+
+  it('close() chama browser.close() mesmo quando context.close() falha', async () => {
+    mockContext.close.mockRejectedValueOnce(new Error('falha ao fechar contexto'));
+
+    const session = await createBrowserSession();
+    await expect(session.close()).rejects.toThrow('falha ao fechar contexto');
+    expect(mockBrowser.close).toHaveBeenCalledOnce();
   });
 });

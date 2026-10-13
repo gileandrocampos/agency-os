@@ -9,6 +9,8 @@ import { buildSiteManifest, saveSiteManifest } from '../../manifest-builder';
 import { extractBranding } from '../../branding-extractor';
 import { extractContacts } from '../../contact-extractor';
 import { runCrawler } from '../../crawler/index';
+import { detectChallenge } from '../../crawler/anti-bot/challenge-detector';
+import { recordDomainAttempt, recordDomainBlock } from '../../filesystem';
 
 const {
   mockClose,
@@ -176,7 +178,29 @@ const {
         logsDir: '/logs',
         outputDir: '/output',
       },
-      browser: {},
+      browser: {
+        headless: false,
+        slowMoMs: 0,
+        antiBot: {
+          enabled: true,
+          stealth: true,
+          rotateFingerprint: true,
+          fingerprints: [],
+          humanizedDelay: {
+            enabled: false,
+            minMs: 0,
+            maxMs: 0,
+          },
+          challengeDetection: {
+            enabled: true,
+            patterns: ['cloudflare'],
+          },
+          blockMetrics: {
+            enabled: true,
+            fileName: 'block-metrics.json',
+          },
+        },
+      },
       network: {},
       locale: {},
       logging: {},
@@ -239,6 +263,10 @@ vi.mock('../../contact-extractor', () => ({
   extractContacts: vi.fn().mockReturnValue(mockContacts),
 }));
 
+vi.mock('../../crawler/anti-bot/challenge-detector', () => ({
+  detectChallenge: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock('../../logger', () => ({
   initLogger: vi.fn(),
   logStart: vi.fn(),
@@ -257,6 +285,8 @@ vi.mock('../../logger', () => ({
 vi.mock('../../filesystem', () => ({
   ensureDir: vi.fn(),
   buildSessionDir: vi.fn().mockReturnValue('/output/example.com_2026-01-01'),
+  recordDomainAttempt: vi.fn(),
+  recordDomainBlock: vi.fn(),
 }));
 
 describe('runCrawler', () => {
@@ -267,7 +297,29 @@ describe('runCrawler', () => {
         logsDir: '/logs',
         outputDir: '/output',
       },
-      browser: {},
+      browser: {
+        headless: false,
+        slowMoMs: 0,
+        antiBot: {
+          enabled: true,
+          stealth: true,
+          rotateFingerprint: true,
+          fingerprints: [],
+          humanizedDelay: {
+            enabled: false,
+            minMs: 0,
+            maxMs: 0,
+          },
+          challengeDetection: {
+            enabled: true,
+            patterns: ['cloudflare'],
+          },
+          blockMetrics: {
+            enabled: true,
+            fileName: 'block-metrics.json',
+          },
+        },
+      },
       network: {},
       locale: {},
       logging: {},
@@ -327,7 +379,7 @@ describe('runCrawler', () => {
 
   it('chama loadPage com a URL validada', async () => {
     await runDefaultCrawler();
-    expect(loadPage).toHaveBeenCalledWith(mockPage, 'https://example.com/');
+    expect(loadPage).toHaveBeenCalledWith(mockPage, 'https://example.com/', expect.any(Function));
   });
 
   it('chama extractMetadata com o HTML renderizado', async () => {
@@ -390,6 +442,56 @@ describe('runCrawler', () => {
   it('carrega configuração global via serviço injetado', async () => {
     await runDefaultCrawler();
     expect(mockConfigService.read).toHaveBeenCalledOnce();
+  });
+
+  it('registra tentativa de domínio antes da execução', async () => {
+    await runDefaultCrawler();
+    expect(recordDomainAttempt).toHaveBeenCalledOnce();
+    expect(recordDomainAttempt).toHaveBeenCalledWith(
+      '/logs',
+      'example.com',
+      expect.any(String),
+      'block-metrics.json',
+    );
+  });
+
+  it('não interrompe o crawl quando recordDomainAttempt falha', async () => {
+    (recordDomainAttempt as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
+      throw new Error('falha de escrita');
+    });
+
+    const result = await runDefaultCrawler();
+
+    expect(result).not.toBeNull();
+    expect(saveSiteManifest).toHaveBeenCalledOnce();
+  });
+
+  it('retorna null e registra bloqueio quando challenge é detectado', async () => {
+    (detectChallenge as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      type: 'cloudflare',
+      matchedPattern: 'cloudflare',
+      source: 'html',
+    });
+
+    const result = await runDefaultCrawler();
+
+    expect(result).toBeNull();
+    expect(recordDomainBlock).toHaveBeenCalledOnce();
+    expect(captureScreenshot).not.toHaveBeenCalled();
+    expect(saveHtml).not.toHaveBeenCalled();
+  });
+
+  it('não lança erro quando recordDomainBlock falha durante challenge', async () => {
+    (detectChallenge as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      type: 'cloudflare',
+      matchedPattern: 'cloudflare',
+      source: 'html',
+    });
+    (recordDomainBlock as ReturnType<typeof vi.fn>).mockImplementationOnce(() => {
+      throw new Error('falha de escrita');
+    });
+
+    await expect(runDefaultCrawler()).resolves.toBeNull();
   });
 
   it('lança erro se URL for inválida', async () => {

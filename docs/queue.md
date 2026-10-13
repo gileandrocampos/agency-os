@@ -28,8 +28,8 @@ import {
   countPending,
   findByUrl,
   processQueue,
-} from './queue';
-import type { CrawlJobConfig, Job, JobPriority, JobStatus, QueueJobExecutor } from './queue';
+} from '../src/queue';
+import type { CrawlJobConfig, Job, JobPriority, JobStatus, QueueJobExecutor } from '../src/queue';
 ```
 
 ---
@@ -99,7 +99,7 @@ list({ status: 'pending' })  // só pendentes
 
 ### `getNext(): Job | null`
 
-Retorna o próximo job pendente por ordem de prioridade (`high` → `normal` → `low`) e data de criação. O job é marcado como `running` de forma atômica.
+Retorna o próximo job pendente ordenado por `attempts` crescente, prioridade (`high` → `normal` → `low`), `updated_at` crescente e, por fim, `created_at` crescente. O job é marcado como `running` de forma atômica.
 
 ---
 
@@ -119,7 +119,7 @@ Lança `Error` se o `id` não existir.
 
 ### `recoverRunningJobs(): number`
 
-Reencaminha jobs `running` para `pending` (útil em restart após crash). Retorna quantidade de jobs recuperados.
+Reencaminha para `pending` apenas jobs `running` sem renovação de lease nos últimos cinco minutos (útil em restart após crash). Retorna quantidade de jobs recuperados.
 
 ---
 
@@ -143,18 +143,18 @@ Busca um job pela URL. Retorna `undefined` se não encontrado.
 
 ## Consumer (`consumer.ts`)
 
-### `processQueue(executor?): Promise<void>`
+### `processQueue(executor): Promise<void>`
 
 Processa todos os jobs pendentes em sequência:
 
-1. Recupera jobs `running` com `recoverRunningJobs()`
+1. Recupera jobs `running` com lease expirado via `recoverRunningJobs()`
 2. Conta os pendentes com `countPending()`
 3. Ativa modo silencioso no logger (`setSilent(true)`) para suprimir logs individuais de crawl
-4. Itera com `getNext()` → `executor.execute(job)` → `markDone()` ou `markFailed()`
+4. Itera com `getNext()` → `executor.execute(job)` → `markDone()` ou `markFailed()`, renovando o lease do job durante a execução
 5. Restaura o logger (`setSilent(false)`) no bloco `finally`
 6. Exibe resumo final via `logQueue()`
 
-`executor` é injetável via interface `QueueJobExecutor`, permitindo paralelização/distribuição futura sem acoplamento à implementação interna do crawler.
+`executor` é injetável via interface `QueueJobExecutor` ou função que recebe a URL, permitindo reutilizar a fila com diferentes executores.
 
 ---
 
@@ -194,7 +194,7 @@ npm run safe-queue
 ```
 markFailed(id, msg)
   └─ attempts + 1 < max_attempts?
-       ├─ sim → status = 'pending'   (será reprocessado no próximo queue:run)
+       ├─ sim → status = 'pending'   (pode ser reprocessado na execução atual ou no próximo queue:run)
        └─ não → status = 'failed'    (encerrado com erro)
 ```
 

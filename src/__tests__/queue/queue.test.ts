@@ -151,6 +151,20 @@ describe('getNext', () => {
 
     expect(getNext()).toBeNull();
   });
+
+  it('prioriza outros pendentes antes de reprocessar um retry recente', () => {
+    const first = enqueue({ url: 'https://first.com', max_attempts: 3 });
+    enqueue({ url: 'https://second.com' });
+    if (!first.created) return;
+
+    const running = getNext();
+    if (!running) return;
+    markFailed(running.id, 'timeout');
+
+    const next = getNext();
+    expect(next).not.toBeNull();
+    expect(next!.url).toBe('https://second.com');
+  });
 });
 
 describe('markDone', () => {
@@ -207,17 +221,32 @@ describe('recoverRunningJobs', () => {
     testDb.prepare('DELETE FROM jobs').run();
   });
 
-  it('reencaminha jobs running para pending', () => {
+  it('reencaminha jobs running com lease expirado para pending', () => {
     const result = enqueue({ url: 'https://running.com' });
     if (!result.created) return;
 
-    testDb.prepare("UPDATE jobs SET status = 'running' WHERE id = ?").run(result.job.id);
+    testDb.prepare("UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ?")
+      .run('2000-01-01T00:00:00.000Z', result.job.id);
 
     const recovered = recoverRunningJobs();
     const job = findByUrl('https://running.com');
 
     expect(recovered).toBe(1);
     expect(job!.status).toBe('pending');
+  });
+
+  it('mantém jobs running com lease ativo', () => {
+    const result = enqueue({ url: 'https://active.com' });
+    if (!result.created) return;
+
+    testDb.prepare("UPDATE jobs SET status = 'running', updated_at = ? WHERE id = ?")
+      .run(new Date().toISOString(), result.job.id);
+
+    const recovered = recoverRunningJobs();
+    const job = findByUrl('https://active.com');
+
+    expect(recovered).toBe(0);
+    expect(job!.status).toBe('running');
   });
 });
 

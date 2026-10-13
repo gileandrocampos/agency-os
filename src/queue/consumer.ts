@@ -1,4 +1,12 @@
-import { getNext, markDone, markFailed, countPending, recoverRunningJobs } from './queue';
+import {
+  getNext,
+  markDone,
+  markFailed,
+  countPending,
+  recoverRunningJobs,
+  refreshRunningJobLease,
+  RUNNING_JOB_LEASE_MS,
+} from './queue';
 import { runCrawler } from '../crawler';
 import { setSilent, logQueue } from '../logger';
 import type { Job } from './types';
@@ -28,13 +36,18 @@ function formatRetry(attempt: number, maxAttempts: number, job: Job, durationMs:
 type JobOutcome = 'done' | 'retry' | 'failed';
 
 async function processJob(
-  executor: QueueJobExecutor,
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
   job: Job,
 ): Promise<{ outcome: JobOutcome; durationMs: number; reason?: string }> {
   const start = Date.now();
+  const heartbeat = setInterval(() => refreshRunningJobLease(job.id), RUNNING_JOB_LEASE_MS / 3);
 
   try {
-    await executor.execute(job);
+    if (typeof executor === 'function') {
+      await executor(job.url);
+    } else {
+      await executor.execute(job);
+    }
     markDone(job.id);
     return { outcome: 'done', durationMs: Date.now() - start };
   } catch (error) {
@@ -48,10 +61,14 @@ async function processJob(
     }
 
     return { outcome: 'failed', durationMs: Date.now() - start, reason: message };
+  } finally {
+    clearInterval(heartbeat);
   }
 }
 
-export async function processQueue(executor: QueueJobExecutor = new CrawlerQueueExecutor()): Promise<void> {
+export async function processQueue(
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>) = new CrawlerQueueExecutor(),
+): Promise<void> {
   const recoveredJobs = recoverRunningJobs();
   if (recoveredJobs > 0) {
     logQueue(`${recoveredJobs} job(s) em running foram reencaminhados para pending.`);

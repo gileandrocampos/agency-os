@@ -2,13 +2,15 @@
 
 Documentação dos módulos que compõem o núcleo de execução do crawler, exceto o `page-preparer` (documentado em [page-preparation.md](page-preparation.md)).
 
+Inclui também o fluxo anti-bot baseado em `Patchright`, rotação de fingerprint por sessão, delay humanizado e detecção de challenge.
+
 ---
 
 ## `browser.ts`
 
 Arquivo: `src/crawler/browser.ts`
 
-Cria e gerencia a sessão Playwright (browser + context + page). Encapsula o ciclo de vida do browser para que o orquestrador não precise conhecer os detalhes de `BrowserContext`.
+Cria e gerencia a sessão de browser (Patchright + contexto + página). Encapsula o ciclo de vida para que o orquestrador não precise conhecer detalhes de criação de contexto.
 
 ### Interface `BrowserSession`
 
@@ -19,9 +21,15 @@ Cria e gerencia a sessão Playwright (browser + context + page). Encapsula o cic
 
 **Ordem de fechamento:** `context.close()` → `browser.close()`. O context deve fechar primeiro para garantir que todos os handlers de rede sejam encerrados antes do processo do browser.
 
-### `createBrowserSession(): Promise<BrowserSession>`
+### `createBrowserSession(config): Promise<BrowserSession>`
 
-Lança o Chromium em modo headless, cria um novo contexto e uma nova página. Retorna um `BrowserSession`.
+Lança o Chromium com opções de `headless` e `slowMo`, cria contexto e página, e aplica fingerprint de sessão (quando habilitado) com:
+
+- `userAgent`
+- `viewport`
+- `locale`
+- `platform` via header
+- `isMobile` / `hasTouch` / `deviceScaleFactor`
 
 ---
 
@@ -29,7 +37,7 @@ Lança o Chromium em modo headless, cria um novo contexto e uma nova página. Re
 
 Arquivo: `src/crawler/page-loader.ts`
 
-### `loadPage(page: Page, url: string): Promise<void>`
+### `loadPage(page: Page, url: string, beforeNavigationDelay?): Promise<void>`
 
 Navega para a URL usando `page.goto()` com:
 
@@ -37,6 +45,8 @@ Navega para a URL usando `page.goto()` com:
 |--------------|----------------|----------------------------------------------------|
 | `waitUntil`  | `networkidle`  | Aguarda até que não haja requisições de rede ativas |
 | `timeout`    | `30000` ms     | Evita travar indefinidamente em sites lentos        |
+
+Quando configurado, executa um delay humanizado antes de navegar.
 
 ---
 
@@ -83,7 +93,7 @@ Arquivo: `src/crawler/index.ts`
 
 Ponto central que combina todas as camadas em um fluxo coeso.
 
-### `runCrawler(rawUrl: string): Promise<CrawlerResult>`
+### `runCrawler(rawUrl: string): Promise<CrawlerResult \| null>`
 
 Função pública exportada. Executada pela CLI.
 
@@ -96,6 +106,8 @@ Função pública exportada. Executada pela CLI.
 4. executeCrawl(config)
      a. createBrowserSession()
      b. loadPage(session.page, config.url)
+     c. detectChallenge(session.page)
+        - se detectar, registra métricas de bloqueio e encerra com `null`
      c. PagePreparationService.prepare(page)
      d. captureScreenshot(desktop)
      e. captureScreenshot(mobile)
@@ -106,8 +118,28 @@ Função pública exportada. Executada pela CLI.
      j. saveSiteManifest() → site.json
      k. session.close()  [sempre, via finally]
 5. logSuccess
-6. return CrawlerResult
+6. return CrawlerResult (ou `null` se challenge for detectado)
 ```
+
+### Fluxo Anti-Bot
+
+Configuração em `config.json` (`browser.antiBot`):
+
+- `enabled`: liga/desliga camada anti-bot
+- `stealth`: liga/desliga aplicação de stealth/fingerprint
+- `rotateFingerprint`: sorteia fingerprint por sessão
+- `fingerprints`: lista de perfis reais (UA + viewport + platform + locale)
+- `humanizedDelay`: intervalo randômico para ações interativas
+- `challengeDetection`: padrões de texto para identificar bloqueio/CAPTCHA
+- `blockMetrics`: persistência de tentativas e bloqueios por domínio
+
+Métricas por domínio são persistidas em `logs/block-metrics.json` (ou arquivo configurado), com:
+
+- `attempts`
+- `blocked`
+- `lastAttemptAt`
+- `lastBlockedAt`
+- `lastChallengeType`
 
 ### `CrawlerResult`
 
