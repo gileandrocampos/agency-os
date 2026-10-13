@@ -7,11 +7,18 @@ import {
   refreshRunningJobLease,
   RUNNING_JOB_LEASE_MS,
 } from './queue';
+import { runCrawler } from '../crawler';
 import { setSilent, logQueue } from '../logger';
 import type { Job } from './types';
 
 export interface QueueJobExecutor {
   execute(job: Job): Promise<void>;
+}
+
+class CrawlerQueueExecutor implements QueueJobExecutor {
+  async execute(job: Job): Promise<void> {
+    await runCrawler(job.url);
+  }
 }
 
 function formatResult(index: number, total: number, job: Job, status: 'done' | 'failed', durationMs: number, reason?: string): string {
@@ -21,12 +28,17 @@ function formatResult(index: number, total: number, job: Job, status: 'done' | '
   return `[${index}/${total}] ${job.url} ... ${icon} ${status}${suffix} (${seconds}s)`;
 }
 
+function formatRetry(attempt: number, maxAttempts: number, job: Job, durationMs: number, reason: string): string {
+  const seconds = (durationMs / 1000).toFixed(1);
+  return `[retry ${attempt}/${maxAttempts}] ${job.url} ... ⚠ retry agendado (${reason}) (${seconds}s)`;
+}
+
+type JobOutcome = 'done' | 'retry' | 'failed';
+
 async function processJob(
   executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
   job: Job,
-  index: number,
-  total: number,
-): Promise<boolean> {
+): Promise<{ outcome: JobOutcome; durationMs: number; reason?: string }> {
   const start = Date.now();
   const heartbeat = setInterval(() => refreshRunningJobLease(job.id), RUNNING_JOB_LEASE_MS / 3);
 
@@ -37,20 +49,25 @@ async function processJob(
       await executor.execute(job);
     }
     markDone(job.id);
-    logQueue(formatResult(index, total, job, 'done', Date.now() - start));
-    return true;
+    return { outcome: 'done', durationMs: Date.now() - start };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     markFailed(job.id, message);
-    logQueue(formatResult(index, total, job, 'failed', Date.now() - start, message));
-    return false;
+
+    const attempt = job.attempts + 1;
+    if (attempt < job.max_attempts) {
+      logQueue(formatRetry(attempt, job.max_attempts, job, Date.now() - start, message));
+      return { outcome: 'retry', durationMs: Date.now() - start };
+    }
+
+    return { outcome: 'failed', durationMs: Date.now() - start, reason: message };
   } finally {
     clearInterval(heartbeat);
   }
 }
 
 export async function processQueue(
-  executor: QueueJobExecutor | ((url: string) => Promise<unknown>),
+  executor: QueueJobExecutor | ((url: string) => Promise<unknown>) = new CrawlerQueueExecutor(),
 ): Promise<void> {
   const recoveredJobs = recoverRunningJobs();
   if (recoveredJobs > 0) {
@@ -64,7 +81,8 @@ export async function processQueue(
   }
 
   setSilent(true);
-  let index = 0;
+  let attempts = 0;
+  let completed = 0;
   let succeeded = 0;
   let failed = 0;
   const start = Date.now();
@@ -72,9 +90,23 @@ export async function processQueue(
   try {
     let job = getNext();
     while (job) {
-      index++;
-      const ok = await processJob(executor, job, index, total);
-      if (ok) succeeded++; else failed++;
+      attempts++;
+      const result = await processJob(executor, job);
+
+      if (result.outcome === 'retry') {
+        job = getNext();
+        continue;
+      }
+
+      completed++;
+      if (result.outcome === 'done') {
+        succeeded++;
+        logQueue(formatResult(completed, total, job, 'done', result.durationMs));
+      } else {
+        failed++;
+        logQueue(formatResult(completed, total, job, 'failed', result.durationMs, result.reason));
+      }
+
       job = getNext();
     }
   } finally {
@@ -82,5 +114,5 @@ export async function processQueue(
   }
 
   const totalSeconds = ((Date.now() - start) / 1000).toFixed(1);
-  logQueue(`\nFila processada: ${index} job(s) em ${totalSeconds}s — ${succeeded} sucesso(s), ${failed} falha(s).`);
+  logQueue(`\nFila processada: ${completed} job(s) em ${totalSeconds}s — ${succeeded} sucesso(s), ${failed} falha(s), ${attempts} tentativa(s).`);
 }

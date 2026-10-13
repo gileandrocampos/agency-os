@@ -104,6 +104,33 @@ describe('processQueue', () => {
     expect(logQueue).toHaveBeenCalledWith(expect.stringContaining('failed'));
   });
 
+  it('loga retry separadamente e conta apenas o resultado terminal no progresso', async () => {
+    const job = makeJob({ max_attempts: 2 });
+    const retriedJob = makeJob({ attempts: 1, max_attempts: 2 });
+    const execute = vi.fn()
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockRejectedValueOnce(new Error('timeout final'));
+    (recoverRunningJobs as ReturnType<typeof vi.fn>).mockReturnValue(0);
+    (countPending as ReturnType<typeof vi.fn>).mockReturnValue(1);
+    (getNext as ReturnType<typeof vi.fn>)
+      .mockReturnValueOnce(job)
+      .mockReturnValueOnce(retriedJob)
+      .mockReturnValue(null);
+
+    await processQueue({ execute });
+
+    expect(execute).toHaveBeenNthCalledWith(1, job);
+    expect(execute).toHaveBeenNthCalledWith(2, retriedJob);
+    expect(logQueue).toHaveBeenCalledWith(expect.stringContaining('[retry 1/2]'));
+    expect(logQueue).toHaveBeenCalledWith(expect.stringContaining('[1/1]'));
+    expect(logQueue).not.toHaveBeenCalledWith(expect.stringContaining('[2/1]'));
+    const summaryCall = (logQueue as ReturnType<typeof vi.fn>).mock.calls.find(
+      (call) => String(call[0]).includes('Fila processada'),
+    );
+    expect(summaryCall?.[0]).toContain('1 falha');
+    expect(summaryCall?.[0]).toContain('2 tentativa(s)');
+  });
+
   it('renova o lease enquanto um job está sendo processado', async () => {
     const job = makeJob();
     let finishCrawl!: () => void;
