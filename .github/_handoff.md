@@ -44,26 +44,20 @@ Branch atual: chore/reorganize-copilot-context
   - resumo e índice adicionados, sem reescrita do conteúdo existente.
   - checagem de estrutura: todos os headings e tabelas do original mantidos em algum subarquivo; total de palavras >= original.
   - referencia `Detalhes: docs/crawler/README.md` validada em `.github/instructions/crawler.instructions.md`.
-
-## Proximo passo exato
-1. Permanecer em `chore/reorganize-copilot-context`.
-2. Confirmar commit do lote D1: `docs(crawler): split into docs/crawler/ by responsibility`.
-3. Pausar para validacao.
-4. Aguardar instrucao para iniciar D2 (`docs/page-preparation.md`).
+- Lote (d2) concluido: `docs/page-preparation/` split por responsabilidade em `README.md`, `overview.md`, `contracts.md`, `steps.md`, `tasks.md` e `runtime.md`.
+  - preservou o histórico com `git mv docs/page-preparation.md docs/page-preparation/overview.md`.
+  - resumo e índice adicionados; o conteúdo foi movido sem parfrasear ou condensar.
+  - checagem de estrutura: todos os headings do original mantidos em algum subarquivo e total de palavras >= original.
+  - observacao: o conteudo pertence conceitualmente ao crawler, mas foi mantido separado em `docs/page-preparation/` conforme a decisao vigente.
+- Proximo passo: iniciar D3 (`docs/queue.md`) somente apos aprovacao do D2.
 
 ## O que falta
-- Executar lote (d): dividir docs longos em pastas com README + subdocs.
+- Executar lote (d3): dividir `docs/queue.md` em `docs/queue/` com README + subdocs.
 - Executar lote (e): consolidar/fundir `docs/README.md` (incluindo conteudo vindo de `.github/instructions/README.md`).
 - Garantir meta de tokens de docs (nao crescer; alvo <= ~14.6k).
 - Rodar checagem de links ao final de cada lote e commitar 1 lote por commit.
 
 ## Proximo passo exato
 1. Permanecer em `chore/reorganize-copilot-context`.
-2. Implementar somente o lote (d): dividir docs longos em pastas com `README.md` + subdocs (`docs/crawler/`, `docs/page-preparation/`, `docs/queue/`).
-3. Rodar checagem de links markdown.
-4. Commitar apenas lote (d) e pausar para validacao.
-
-Comandos sugeridos para retomar:
-- `git checkout chore/reorganize-copilot-context`
-- `git status`
-- iniciar lote (c)
+2. Pausar apos confirmacao do lote D2.
+3. Aguardar instrucao para iniciar D3 (`docs/queue.md`).
