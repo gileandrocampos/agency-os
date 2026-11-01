@@ -49,15 +49,18 @@ Branch atual: chore/reorganize-copilot-context
   - resumo e índice adicionados; o conteúdo foi movido sem parfrasear ou condensar.
   - checagem de estrutura: todos os headings do original mantidos em algum subarquivo e total de palavras >= original.
   - observacao: o conteudo pertence conceitualmente ao crawler, mas foi mantido separado em `docs/page-preparation/` conforme a decisao vigente.
-- Proximo passo: iniciar D3 (`docs/queue.md`) somente apos aprovacao do D2.
+- Lote (d3) concluido: `docs/queue/` split por responsabilidade em `README.md`, `overview.md`, `api.md`, `cli.md` e `storage.md`.
+  - preservou o histórico com `git mv docs/queue.md docs/queue/api.md`.
+  - a referência de API (queue, types, consumer, storage) foi separada do uso via CLI/comandos.
+  - checagem de preservação: todos os trechos principais do original continuam presentes e total de palavras >= original; checagem de links local `broken_links=0`.
 
 ## O que falta
-- Executar lote (d3): dividir `docs/queue.md` em `docs/queue/` com README + subdocs.
 - Executar lote (e): consolidar/fundir `docs/README.md` (incluindo conteudo vindo de `.github/instructions/README.md`).
 - Garantir meta de tokens de docs (nao crescer; alvo <= ~14.6k).
 - Rodar checagem de links ao final de cada lote e commitar 1 lote por commit.
 
 ## Proximo passo exato
 1. Permanecer em `chore/reorganize-copilot-context`.
-2. Pausar apos confirmacao do lote D2.
-3. Aguardar instrucao para iniciar D3 (`docs/queue.md`).
+2. Fazer commit do lote D3: `docs(queue): split into docs/queue/ by responsibility`.
+3. Pausar para validacao final do lote de docs longos.
+4. Aguardar instrucao para iniciar o lote (e).
