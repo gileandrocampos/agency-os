@@ -1,24 +1,13 @@
 ---
+description: Regras de construção e persistência de saída da sessão.
 applyTo: "src/manifest-builder/**,src/filesystem/**"
 ---
 
-# Output — Manifest e Filesystem
+- Em `src/manifest-builder/**`, apenas monte o manifesto com dados já extraídos.
+- Não chame extractors nem reprocesse HTML dentro de manifest builder.
+- Trate `site.json` como contrato público: mudança de shape exige testes e atualização de documentação.
+- Concentre criação de diretório e path de sessão em `src/filesystem/**`.
+- Não crie paths de `output/` diretamente fora de `src/filesystem/**`.
+- Preserve o formato `output/<domain>_<timestamp>/` salvo decisão explícita de mudança de contrato.
 
-## Módulos cobertos
-
-| Módulo | Localização | Responsabilidade |
-|---|---|---|
-| ManifestBuilder | `src/manifest-builder/` | Consolida tudo em `site.json` |
-| FileSystem | `src/filesystem/index.ts` | Cria diretórios e constrói caminhos de sessão |
-
-## Regras específicas
-
-- `ManifestBuilder` recebe os resultados já prontos de Parser/BrandingExtractor/ContactExtractor/
-  MetadataExtractor e apenas monta o objeto final — não deve chamar extractors nem reprocessar HTML.
-- `site.json` é o contrato de saída público do projeto. Qualquer mudança na sua forma (campos
-  adicionados, removidos ou renomeados) é mudança de contrato: precisa de teste dedicado e de
-  atualização no CHANGELOG (regra geral do `copilot-instructions.md` raiz).
-- `FileSystem` é o único módulo autorizado a criar diretórios/caminhos em `output/`. Nenhum outro
-  módulo deve chamar `fs.mkdir` diretamente — sempre via `FileSystem`.
-- Convenção de path de sessão: `output/<domain>_<timestamp>/`. Mudança nesse formato afeta scripts
-  externos que leem o output — tratar como mudança de contrato também.
+Detalhes: docs/manifest-builder.md

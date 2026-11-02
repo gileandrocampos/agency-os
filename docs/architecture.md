@@ -1,5 +1,12 @@
 # Arquitetura
 
+> **Resumo**
+> Visao transversal do fluxo de execucao, das camadas e das responsabilidades do sistema.
+> Entradas: URL e parametros vindos da CLI.
+> Saidas: execucao de crawl, extracao e consolidacao de artefatos por sessao.
+> Dependencias: `src/cli/`, `src/application/`, `src/crawler/`, `src/parser/`, `src/manifest-builder/`, `src/filesystem/`, `src/logger/`, `src/utils/`, `src/types/`, `src/config/`.
+> Codigo: `src/**`.
+
 ## Visão geral do fluxo
 
 ```
@@ -58,7 +65,7 @@ Logs (logs/execution.log)
 | **Logger**        | `src/logger/index.ts`              | Logs prefixados com timestamp no console e em arquivo             |
 | **Utils**         | `src/utils/`                       | Funções puras: validação de URL, extração de domínio, timestamp   |
 | **Types**         | `src/types/`                       | Interfaces e constantes compartilhadas entre camadas              |
-| **Config**        | `src/config.ts`                    | Paths globais resolvidos (`LOGS_DIR`, `OUTPUT_DIR`)               |
+| **Config**        | `src/config/index.ts`              | Paths globais resolvidos (`LOGS_DIR`, `OUTPUT_DIR`)               |
 
 ---
 
@@ -76,6 +83,6 @@ Logs (logs/execution.log)
 
 ## Tipos compartilhados
 
-Ver `src/types/index.ts` e `src/types/preparation.ts`. Documentação completa em [page-preparation.md](page-preparation.md).
+Ver `src/types/index.ts` e `src/types/preparation.ts`. Documentação completa em [page-preparation/README.md](page-preparation/README.md).
 
 O `site.json` é produzido pelo ManifestBuilder e passa a ser o contrato principal de dados para auditorias, geradores e integrações futuras.

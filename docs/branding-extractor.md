@@ -1,5 +1,12 @@
 # BrandingExtractor
 
+> **Resumo**
+> Define o contrato e a estrutura do modulo que extrai identidade visual de pagina renderizada.
+> Entradas: pagina renderizada e dados reais disponiveis em DOM/CSS/recursos carregados.
+> Saidas: objeto tipado com sinais de marca, sem escrita em disco.
+> Dependencias: parser de DOM/CSS e tipos do proprio modulo.
+> Codigo: `src/branding-extractor/**`.
+
 ## Objetivo
 
 O módulo `BrandingExtractor` extrai identidade visual de páginas renderizadas sem IA e sem escrita em disco. Ele analisa apenas dados reais disponíveis no DOM, estilos computados, folhas de estilo e recursos carregados.

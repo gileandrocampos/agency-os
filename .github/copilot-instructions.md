@@ -1,136 +1,53 @@
-# Agency OS — Copilot Instructions
+# Agency OS - Copilot Instructions
 
 ## Projeto
+Agency OS e um crawler local em TypeScript que recebe uma URL, renderiza com Playwright, extrai dados estruturados e salva `site.json` + screenshots em `output/<domain>_<timestamp>/`.
+Este arquivo define regras universais; regras por modulo ficam em `.github/instructions/*.instructions.md`.
 
-Agency OS é um crawler local em TypeScript que recebe uma URL, renderiza a página com Playwright, extrai dados estruturados (branding, contatos, metadados, parser) e grava `site.json` + screenshots em `output/<domain>_<timestamp>/`.
+## Stack
+Node.js · TypeScript estrito · Playwright · Vitest · tsx (esbuild)
 
-Stack: Node.js · TypeScript estrito · Playwright · Vitest · tsx (esbuild)
+## Comandos
+- `npm run crawl <url>`
+- `npm run queue -- queue:<sub>`
+- `npm run safe-queue`
+- `npm test`
+- `npm run test:coverage`
 
-Este arquivo cobre apenas regras universais, aplicadas em qualquer arquivo do repo.
-Regras específicas de cada módulo estão em `.github/instructions/*.instructions.md`
-(carregam automaticamente quando o Copilot trabalha em arquivos daquele módulo — ver
-`.github/instructions/README.md` para o mapa completo).
+## Convenções globais
+- Nunca usar `console.log` fora de `src/logger/`; logs passam pelo `Logger`.
+- Shared (`src/config/**`, `src/logger/**`, `src/types/**`, `src/utils/**`) pode ser importado por qualquer camada.
+- Nao ha importacao direta entre modulos nao-shared; a orquestracao fica no nivel de aplicacao.
+- Shared nao importa de crawler, parser, extractors, manifest-builder, filesystem ou queue.
+- Codigo: ingles; logs e mensagens para usuario: portugues; testes em portugues.
+- `strict` ativo; sem `any` explicito; sem default export; imports Node.js com namespace.
+- Funcoes stateless; max 40 linhas; params obrigatorios antes dos opcionais.
+- Bordas do sistema e tasks internas devem lancar `Error` com contexto.
 
----
+## Mapa de módulos
+| Módulo | caminho | instrução | doc |
+|---|---|---|---|
+| CLI + Application | `src/cli/**`, `src/application/**` | `.github/instructions/entrypoint.instructions.md` | `docs/application.md` |
+| Crawler | `src/crawler/**` | `.github/instructions/crawler.instructions.md` | `docs/crawler/README.md` |
+| Page Preparation | `src/crawler/page-preparer/**` | `.github/instructions/crawler.instructions.md` | `docs/page-preparation/README.md` |
+| Parser | `src/parser/**` | `.github/instructions/extraction.instructions.md` | `docs/parser.md` |
+| Branding Extractor | `src/branding-extractor/**` | `.github/instructions/extraction.instructions.md` | `docs/branding-extractor.md` |
+| Contact Extractor | `src/contact-extractor/**` | `.github/instructions/extraction.instructions.md` | `docs/contact-extractor.md` |
+| Manifest Builder | `src/manifest-builder/**` | `.github/instructions/output.instructions.md` | `docs/manifest-builder.md` |
+| Filesystem | `src/filesystem/**` | `.github/instructions/output.instructions.md` | `docs/core.md` |
+| Config | `src/config/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Logger | `src/logger/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Types | `src/types/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Utils | `src/utils/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Queue | `src/queue/**` | `.github/instructions/queue.instructions.md` | `docs/queue/README.md` |
+| Testes | `src/__tests__/**` | `.github/instructions/testing.instructions.md` | `docs/testing.md` |
 
-## Invariantes arquiteturais
+## Regras de contexto
+- Trabalhe um módulo por vez; use o mapa abaixo para achar a instruction e o doc.
+- Leia primeiro o bloco "Resumo" do doc; abra o doc inteiro ou subarquivos só se o resumo não bastar.
+- Nunca leia `docs/` inteiro nem varra o repositório; prefira anexos `#file` e busca dirigida.
+- Não releia arquivos já lidos na conversa.
 
-Estas regras valem em **qualquer** módulo do projeto — não apenas nos módulos Shared:
-
-- **Nunca usar `console.log` direto** fora de `src/logger/`. Toda escrita de log deve passar pelo
-  `Logger` (`logInfo`, `logError`, etc.). Violações são bugs de logging, não preferências de estilo.
-- **Módulos Shared** (`src/logger/`, `src/utils/`, `src/types/`, `src/config.ts`) podem ser
-  importados por qualquer camada. Os demais módulos (Crawler, Parser, extractors, output) **não
-  devem importar uns aos outros diretamente** — a orquestração é sempre feita via injeção de
-  dependência no nível superior (`crawl-site.usecase.ts` / `Crawler`).
-- **Módulos Shared não podem importar** de `src/crawler/`, `src/parser/`, `src/branding-extractor/`,
-  `src/contact-extractor/`, `src/manifest-builder/`, ou `src/filesystem/`. Qualquer dependência
-  circular nessa direção é um erro de arquitetura.
-
----
-
-## Idioma
-
-| Contexto | Idioma |
-|---|---|
-| Código (variáveis, funções, classes, interfaces) | Inglês |
-| Logs e mensagens de erro ao usuário | Português |
-| Testes (`describe` / `it`) | Português |
-| Documentação (`docs/`) | Português |
-
----
-
-## TypeScript
-
-- `tsconfig.json` com strict mode. Sem `any` explícito.
-- Sem `default exports`. Apenas named exports.
-- Imports Node.js com namespace: `import * as fs from 'fs'`, `import * as path from 'path'`.
-- Ordenação de imports: externos → internos (caminhos mais profundos por último).
-
----
-
-## Estrutura de módulos
-
-Cada módulo é uma pasta com `index.ts` exportando apenas a interface pública. Internos não são reexportados.
-
-```
-src/
-  <modulo>/
-    index.ts       ← contrato público
-    <detalhe>.ts   ← implementação interna
-```
-
----
-
-## Funções
-
-- Funções livres para operações stateless. Classes apenas quando há estado encapsulado ou contrato via interface.
-- **Máximo 40 linhas por função.** Decompor se exceder.
-- Parâmetros obrigatórios antes dos opcionais.
-- Sem comentários óbvios — o código deve ser autoexplicativo.
-
-### Injeção de dependência
-
-Orquestradores aceitam dependências como parâmetros opcionais para facilitar testes unitários sem `vi.mock` de módulo:
-
-```ts
-async function executeCrawl(
-  config: CrawlerConfig,
-  preparer: PagePreparationService = new PagePreparationService(),
-): Promise<CrawlerResult>
-```
-
----
-
-## Tratamento de erros
-
-- Bordas do sistema (CLI, validação de URL): lançar `Error` com mensagem descritiva.
-- Steps de preparação: nunca propagam — retornam `PreparationStepResult` com `success: false`.
-- Tasks internas: relançam como `Error` com prefixo de contexto (`WaitDomTask failed: ...`).
-
----
-
-## Scripts
-
-| Script | Comando | Descrição |
-|---|---|---|
-| `npm run crawl <url>` | `tsx src/cli/index.ts crawl` | Executa o crawler |
-| `npm run queue -- queue:<sub>` | `tsx src/cli/index.ts` | Comandos de fila (`queue:add`, `queue:run`, `queue:list`, `queue:status`) |
-| `npm run safe-queue` | `npm test && npm run queue -- queue:run` | Roda testes; aborta se algum falhar, depois processa a fila |
-| `npm run test` | `vitest run` | Suite de testes |
-| `npm run test:coverage` | `vitest run --coverage` | Testes com cobertura |
-
----
-
-## Fluxo de desenvolvimento obrigatório
-
-```
-Nova ideia → Branch → Implementar → Testes → Documentação → Safe-Queue → PR → Merge → Excluir branch
-```
-
-- **Antes de qualquer código:** entender objetivo e escopo. Perguntar se a tarefa for ambígua.
-- **Branch:** criar automaticamente via `git checkout -b <tipo>/<descricao-kebab-case>`, a partir da `main` atualizada. Não esperar o usuário pedir.
-- **Implementação:** restrita ao escopo definido. Mudanças fora do escopo → sinalizar, não fazer.
-- **Testes:** toda `feat`, `fix` ou `refactor` exige testes cobrindo happy path, bordas e erros.
-- **Safe-queue:** executar antes do merge. Nenhum merge sem safe-queue aprovado.
-- **Merge:** via Pull Request para `main`. Nunca push direto. Branches `spike/*` exigem revisão humana explícita.
-- **Pular etapa:** se o usuário pedir, obedecer mas alertar o risco.
-
-Tipos de branch: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `spike` (nunca merge sem revisão humana), `hotfix`.
-Formato: `<tipo>/<descricao-kebab-case>`, minúsculo, sem acentos/underscores, 2–5 palavras.
-
----
-
-## Definition of Done
-
-Uma feature está concluída quando:
-
-- [ ] Implementação finalizada com responsabilidade única
-- [ ] Testes unitários criados e passando
-- [ ] Cobertura ≥ 90%
-- [ ] Safe-crawl executado com sucesso
-- [ ] Logs implementados
-- [ ] Tratamento de erros implementado
-- [ ] Documentação atualizada
-- [ ] CHANGELOG atualizado
-- [ ] Branch pronta para merge via PR
+## Manutenção de docs
+- Ao mudar comportamento ou contrato de um módulo, atualize o doc dele no mesmo commit.
+- Novo módulo em `src/`: siga `docs/_templates/NEW_MODULE.md` (doc, instruction com `applyTo`, linha no mapa e em `docs/README.md`).

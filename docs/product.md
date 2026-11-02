@@ -1,5 +1,12 @@
 # Agency OS
 
+> **Resumo**
+> Descreve o objetivo do produto, forma de uso e escopo funcional atual/futuro da ferramenta.
+> Entradas: URL de site e comandos de execucao via CLI.
+> Saidas: artefatos de analise em `output/<domain>_<timestamp>/`.
+> Dependencias: CLI, crawler e fila.
+> Codigo: `src/cli/**`, `src/application/**`, `src/crawler/**`, `src/queue/**`.
+
 Ferramenta local de linha de comando para automatizar análises de websites.
 
 ---
@@ -16,8 +23,8 @@ Reduzir o tempo necessário para reconstrução e auditoria de sites, fornecendo
 # Execução direta
 npm run crawl https://example.com
 
-# Execução segura (roda os testes antes de executar o crawler)
-npm run safe-crawl https://example.com
+# Execução segura (roda os testes antes de processar a fila)
+npm run safe-queue
 ```
 
 O resultado é salvo em `output/<domínio>_<timestamp>/`:
@@ -40,7 +47,7 @@ Logs de execução são gravados em `logs/execution.log`.
 - Preparação de página: dispensa de cookies, remoção de overlays, ativação de lazy load por scroll, espera por rede ociosa, DOM, fontes e imagens
 - Validação de URL na entrada da CLI
 - Logs com timestamps em arquivo e console
-- Execução segura com gate de testes (`safe-crawl`)
+- Execução segura com gate de testes (`safe-queue`)
 - `SiteParser`: extração de title, description, language, headings, paragraphs, links e images (cheerio)
 - `MetadataExtractor`: extração de metadados do `<head>` (title, description, keywords, author, viewport, charset, robots, canonical, Open Graph, Twitter Card)
 

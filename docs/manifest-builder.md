@@ -1,5 +1,12 @@
 # ManifestBuilder
 
+> **Resumo**
+> Consolida os resultados extraidos pelo pipeline em um `site.json` estavel e tipado.
+> Entradas: dados produzidos por parser/extractors e metadados da sessao de crawl.
+> Saidas: manifesto validado e persistido no diretorio de saida da sessao.
+> Dependencias: contratos de tipos e escrita em disco da camada de saida.
+> Codigo: `src/manifest-builder/**`.
+
 O ManifestBuilder é a camada responsável por transformar os resultados já extraídos pelo crawler em um `site.json` estável, tipado e pronto para evoluir com novas funcionalidades.
 
 ---
