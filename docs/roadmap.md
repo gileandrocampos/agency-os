@@ -13,7 +13,7 @@
 - [x] Captura de screenshot fullpage (desktop 1280×720 + mobile 375×812)
 - [x] Extração de HTML renderizado
 - [x] Logger com timestamps (console + arquivo)
-- [x] Script `safe-crawl` com gate de testes
+- [x] Script `safe-queue` com gate de testes
 - [x] Cobertura de testes ≥ 90%
 
 ---

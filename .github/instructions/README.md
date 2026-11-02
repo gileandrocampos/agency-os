@@ -1,43 +1,21 @@
-# Mapa de instructions do Agency OS
+# Mapa de instruções do Agency OS
 
-Este projeto usa dois níveis de instruções para o Copilot:
+Este repositório usa duas camadas:
 
-1. **`.github/copilot-instructions.md`** — sempre carregado, em toda interação, independente
-   do arquivo em que o Copilot está trabalhando. Contém só o que é universal: idioma, regras
-   de TypeScript, convenção de funções/erros, scripts e o fluxo de trabalho obrigatório (branch,
-   testes, safe-crawl, PR, Definition of Done).
+1. `.github/copilot-instructions.md` — regras universais do projeto.
+2. `.github/instructions/*.instructions.md` — regras por fronteira de responsabilidade.
 
-2. **`.github/instructions/*.instructions.md`** — carregados **somente** quando o Copilot está
-   trabalhando em um arquivo cujo caminho bate com o `applyTo` (glob) do topo do arquivo.
-   Isso evita que a tabela de arquitetura inteira (18 módulos) entre no contexto de toda tarefa,
-   mesmo quando ela só toca um módulo.
+A seleção é feita pelo `applyTo` em cada arquivo e evita duplicar regras em módulos que não precisam delas.
 
-## Por que agrupado assim, e não 1 arquivo por módulo
-
-Os módulos do projeto foram agrupados em 5 arquivos por **fronteira de responsabilidade**,
-não 1:1 com cada pasta — isso mantém o número de arquivos gerenciável e agrupa módulos que
-sempre são tocados juntos numa mesma feature:
-
-| Arquivo | `applyTo` | Cobre |
+| Arquivo | `applyTo` | Cobertura |
 |---|---|---|
-| `entrypoint.instructions.md` | `src/cli/**`, `src/crawl-site.usecase.ts` | CLI, Application |
-| `crawler.instructions.md` | `src/crawler/**` | Crawler, Browser, PageLoader, PagePreparer, Screenshot, HtmlSaver |
-| `extraction.instructions.md` | `src/parser/**`, `src/branding-extractor/**`, `src/contact-extractor/**` | Parser, BrandingExtractor, ContactExtractor, MetadataExtractor |
-| `output.instructions.md` | `src/manifest-builder/**`, `src/filesystem/**` | ManifestBuilder, FileSystem |
-| `shared.instructions.md` | `src/logger/**`, `src/utils/**`, `src/types/**`, `src/config.ts` | Logger, Utils, Types, Config |
-| `testing.instructions.md` | `src/__tests__/**` | Padrões de teste: mocks, `vi.hoisted`, lifecycle, asserts |
+| `entrypoint.instructions.md` | `src/cli/**,src/application/**` | CLI e use cases |
+| `crawler.instructions.md` | `src/crawler/**` | crawl, loader, browser e page-preparer |
+| `extraction.instructions.md` | `src/parser/**,src/branding-extractor/**,src/contact-extractor/**` | parsing e extração |
+| `output.instructions.md` | `src/manifest-builder/**,src/filesystem/**` | manifesto e persistência |
+| `shared.instructions.md` | `src/config/**,src/logger/**,src/types/**,src/utils/**` | base compartilhada |
+| `queue.instructions.md` | `src/queue/**` | fila persistente e processamento |
+| `testing.instructions.md` | `src/__tests__/**` | testes e validações |
 
-## Quando editar o quê
-
-- Regra que vale para o projeto inteiro (ex.: "sempre em português nos logs") → `copilot-instructions.md` raiz.
-- Regra específica de um módulo (ex.: "Screenshot não decide quando capturar") → o `.instructions.md`
-  correspondente.
-- Novo módulo criado → adicionar linha na tabela do arquivo de grupo mais próximo, ou criar um
-  novo `.instructions.md` se o módulo abrir uma fronteira de responsabilidade nova.
-
-## Suporte por ferramenta
-
-Path-specific instructions (`applyTo`) hoje funcionam em: Copilot Chat no VS Code, Visual Studio,
-e Copilot cloud agent. Se o time também usa Copilot em outro client, vale confirmar suporte antes
-de depender só desses arquivos — na dúvida, a regra crítica pode ser duplicada de forma resumida
-no `copilot-instructions.md` raiz como rede de segurança.
+Para manutenção, vale a regra: regras globais no root; regras específicas por módulo ou fronteira no `.github/instructions/`.
+Detalhes operacionais ficam em `docs/README.md` e nos documentos por módulo.

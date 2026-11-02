@@ -3,41 +3,38 @@
 ## Projeto
 Agency OS e um crawler local em TypeScript que recebe uma URL, renderiza com Playwright, extrai dados estruturados e salva `site.json` + screenshots em `output/<domain>_<timestamp>/`.
 Stack: Node.js, TypeScript estrito, Playwright, Vitest, tsx.
-Este arquivo define apenas regras universais; regras por modulo ficam em `.github/instructions/*.instructions.md` (mapa em `.github/instructions/README.md`).
+Este arquivo define regras universais; regras por modulo ficam em `.github/instructions/*.instructions.md`.
+
+## Mapa de módulos
+| Módulo | caminho | instrução | doc |
+|---|---|---|---|
+| CLI + Application | `src/cli/**`, `src/application/**` | `.github/instructions/entrypoint.instructions.md` | `docs/application.md` |
+| Crawler | `src/crawler/**` | `.github/instructions/crawler.instructions.md` | `docs/crawler/README.md` |
+| Page Preparation | `src/crawler/page-preparer/**` | `.github/instructions/crawler.instructions.md` | `docs/page-preparation/README.md` |
+| Parser | `src/parser/**` | `.github/instructions/extraction.instructions.md` | `docs/parser.md` |
+| Branding Extractor | `src/branding-extractor/**` | `.github/instructions/extraction.instructions.md` | `docs/branding-extractor.md` |
+| Contact Extractor | `src/contact-extractor/**` | `.github/instructions/extraction.instructions.md` | `docs/contact-extractor.md` |
+| Manifest Builder | `src/manifest-builder/**` | `.github/instructions/output.instructions.md` | `docs/manifest-builder.md` |
+| Filesystem | `src/filesystem/**` | `.github/instructions/output.instructions.md` | `docs/core.md` |
+| Config | `src/config/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Logger | `src/logger/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Types | `src/types/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Utils | `src/utils/**` | `.github/instructions/shared.instructions.md` | `docs/core.md` |
+| Queue | `src/queue/**` | `.github/instructions/queue.instructions.md` | `docs/queue/README.md` |
+| Testes | `src/__tests__/**` | `.github/instructions/testing.instructions.md` | `docs/testing.md` |
 
 ## Invariantes Arquiteturais
-- Nunca usar `console.log` fora de `src/logger/`; logs devem passar pelo `Logger`.
-- Modulos shared (`src/config/`, `src/logger/`, `src/types/`, `src/utils/`) podem ser importados por qualquer camada.
-- Modulos nao-shared nao devem se importar diretamente entre si; a orquestracao ocorre no nivel de aplicacao.
-- Modulos shared nao podem importar de crawler, parser, extractors, manifest-builder, filesystem ou queue.
+- Nunca usar `console.log` fora de `src/logger/`; logs passam pelo `Logger`.
+- Shared (`src/config/**`, `src/logger/**`, `src/types/**`, `src/utils/**`) pode ser importado por qualquer camada.
+- Não há importação direta entre módulos não-shared; a orquestração fica no nível de aplicação.
+- Shared não importa de crawler, parser, extractors, manifest-builder, filesystem ou queue.
+- Codigo: ingles; logs e mensagens para usuário: portugues; testes em portugues.
+- `strict` ativo; sem `any` explicito; sem default export; imports Node.js com namespace.
+- Funções stateless; max 40 linhas; params obrigatórios antes dos opcionais.
+- Bordas do sistema e tasks internas devem lançar `Error` com contexto.
 
-## Idioma
-- Codigo: ingles.
-- Logs e mensagens de erro para usuario: portugues.
-- Testes (`describe` / `it`): portugues.
-- Documentacao em `docs/`: portugues.
-
-## TypeScript e Estrutura
-- `strict` ativo; sem `any` explicito.
-- Sem `default export`; usar named exports.
-- Imports Node.js com namespace (`import * as fs from 'fs'`).
-- Cada modulo exporta interface publica via `index.ts`; internos nao sao reexportados.
-
-## Funcoes e Dependencias
-- Preferir funcoes stateless; classes apenas com estado encapsulado ou contrato claro.
-- Maximo de 40 linhas por funcao; decompor quando exceder.
-- Parametros obrigatorios antes dos opcionais.
-- Orquestradores aceitam dependencias opcionais para facilitar testes sem mock de modulo.
-
-## Erros e Scripts
-- Bordas do sistema (CLI, validacao) devem lancar `Error` descritivo.
-- Steps de preparacao retornam resultado com falha; nao propagam excecao.
-- Tasks internas relancam `Error` com prefixo de contexto.
+## Scripts e DoD
 - Comandos oficiais: `npm run crawl <url>`, `npm run queue -- queue:<sub>`, `npm run safe-queue`, `npm test`, `npm run test:coverage`.
-
-## Fluxo e DoD
 - Fluxo: Nova ideia -> Branch -> Implementar -> Testes -> Documentacao -> Safe-Queue -> PR -> Merge.
-- Branch padrao: `git checkout -b <tipo>/<descricao-kebab-case>` a partir da `main` atualizada.
-- Sem merge direto em `main`; usar PR.
-- Toda `feat`, `fix` e `refactor` exige testes de happy path, bordas e erros.
+- Toda `feat`, `fix` e `refactor` exige happy path, bordas e erros.
 - Definition of Done: implementacao finalizada, testes passando, cobertura >= 90%, `safe-queue` aprovado, logs/erros/documentacao/CHANGELOG atualizados.
