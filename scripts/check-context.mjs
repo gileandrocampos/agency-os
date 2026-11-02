@@ -227,8 +227,6 @@ function isLikelyRelativePath(token) {
 	if (/^(https?:|mailto:)/i.test(token)) return false;
 	if (token.startsWith('#')) return false;
 	if (token.includes('<') || token.includes('>')) return false;
-	if (/^[A-Za-z0-9_.(){}:+-]+$/.test(token)) return false;
-
 	const allowedStarts = [
 		'src/',
 		'docs/',
@@ -265,6 +263,7 @@ function normalizePathToken(raw) {
 function checkPathExistsFromToken(rawToken) {
 	const token = normalizePathToken(rawToken);
 	if (!isLikelyRelativePath(token)) return true;
+	if (token.startsWith('data/') || token.startsWith('output/')) return true;
 
 	let candidate = token;
 	if (candidate.includes('*')) {
