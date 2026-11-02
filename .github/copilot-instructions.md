@@ -2,8 +2,27 @@
 
 ## Projeto
 Agency OS e um crawler local em TypeScript que recebe uma URL, renderiza com Playwright, extrai dados estruturados e salva `site.json` + screenshots em `output/<domain>_<timestamp>/`.
-Stack: Node.js, TypeScript estrito, Playwright, Vitest, tsx.
 Este arquivo define regras universais; regras por modulo ficam em `.github/instructions/*.instructions.md`.
+
+## Stack
+Node.js · TypeScript estrito · Playwright · Vitest · tsx (esbuild)
+
+## Comandos
+- `npm run crawl <url>`
+- `npm run queue -- queue:<sub>`
+- `npm run safe-queue`
+- `npm test`
+- `npm run test:coverage`
+
+## Convenções globais
+- Nunca usar `console.log` fora de `src/logger/`; logs passam pelo `Logger`.
+- Shared (`src/config/**`, `src/logger/**`, `src/types/**`, `src/utils/**`) pode ser importado por qualquer camada.
+- Nao ha importacao direta entre modulos nao-shared; a orquestracao fica no nivel de aplicacao.
+- Shared nao importa de crawler, parser, extractors, manifest-builder, filesystem ou queue.
+- Codigo: ingles; logs e mensagens para usuario: portugues; testes em portugues.
+- `strict` ativo; sem `any` explicito; sem default export; imports Node.js com namespace.
+- Funcoes stateless; max 40 linhas; params obrigatorios antes dos opcionais.
+- Bordas do sistema e tasks internas devem lancar `Error` com contexto.
 
 ## Mapa de módulos
 | Módulo | caminho | instrução | doc |
@@ -23,18 +42,12 @@ Este arquivo define regras universais; regras por modulo ficam em `.github/instr
 | Queue | `src/queue/**` | `.github/instructions/queue.instructions.md` | `docs/queue/README.md` |
 | Testes | `src/__tests__/**` | `.github/instructions/testing.instructions.md` | `docs/testing.md` |
 
-## Invariantes Arquiteturais
-- Nunca usar `console.log` fora de `src/logger/`; logs passam pelo `Logger`.
-- Shared (`src/config/**`, `src/logger/**`, `src/types/**`, `src/utils/**`) pode ser importado por qualquer camada.
-- Não há importação direta entre módulos não-shared; a orquestração fica no nível de aplicação.
-- Shared não importa de crawler, parser, extractors, manifest-builder, filesystem ou queue.
-- Codigo: ingles; logs e mensagens para usuário: portugues; testes em portugues.
-- `strict` ativo; sem `any` explicito; sem default export; imports Node.js com namespace.
-- Funções stateless; max 40 linhas; params obrigatórios antes dos opcionais.
-- Bordas do sistema e tasks internas devem lançar `Error` com contexto.
+## Regras de contexto
+- Trabalhe um módulo por vez; use o mapa abaixo para achar a instruction e o doc.
+- Leia primeiro o bloco "Resumo" do doc; abra o doc inteiro ou subarquivos só se o resumo não bastar.
+- Nunca leia `docs/` inteiro nem varra o repositório; prefira anexos `#file` e busca dirigida.
+- Não releia arquivos já lidos na conversa.
 
-## Scripts e DoD
-- Comandos oficiais: `npm run crawl <url>`, `npm run queue -- queue:<sub>`, `npm run safe-queue`, `npm test`, `npm run test:coverage`.
-- Fluxo: Nova ideia -> Branch -> Implementar -> Testes -> Documentacao -> Safe-Queue -> PR -> Merge.
-- Toda `feat`, `fix` e `refactor` exige happy path, bordas e erros.
-- Definition of Done: implementacao finalizada, testes passando, cobertura >= 90%, `safe-queue` aprovado, logs/erros/documentacao/CHANGELOG atualizados.
+## Manutenção de docs
+- Ao mudar comportamento ou contrato de um módulo, atualize o doc dele no mesmo commit.
+- Novo módulo em `src/`: siga `docs/_templates/NEW_MODULE.md` (doc, instruction com `applyTo`, linha no mapa e em `docs/README.md`).
