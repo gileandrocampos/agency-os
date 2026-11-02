@@ -1,7 +1,7 @@
 > **Resumo**
 > Este arquivo reúne os módulos de infraestrutura que sustentam a sessão do crawler: arquivos, logs, validação de URL, configuração global e contratos compartilhados.
 > Use esta leitura para confirmar os caminhos, os eventos de execução e os tipos de dados que o pipeline usa.
-> Código de referência: `src/filesystem/**`, `src/logger/**`, `src/utils/**`, `src/config.ts`, `src/types/**`.
+> Código de referência: `src/filesystem/**`, `src/logger/**`, `src/utils/**`, `src/config/`, `src/types/**`.
 
 ## `filesystem/index.ts`
 
@@ -63,7 +63,7 @@ Formato: `YYYY-MM-DD_HH-mm-ss` (19 caracteres). Seguro para uso em nomes de dire
 
 ## `config.ts`
 
-Arquivo: `src/config.ts`
+Arquivo: `src/config/index.ts`
 
 Paths globais resolvidos em relação ao diretório de trabalho atual (`process.cwd()`).
 

@@ -58,7 +58,7 @@ Logs (logs/execution.log)
 | **Logger**        | `src/logger/index.ts`              | Logs prefixados com timestamp no console e em arquivo             |
 | **Utils**         | `src/utils/`                       | Funções puras: validação de URL, extração de domínio, timestamp   |
 | **Types**         | `src/types/`                       | Interfaces e constantes compartilhadas entre camadas              |
-| **Config**        | `src/config.ts`                    | Paths globais resolvidos (`LOGS_DIR`, `OUTPUT_DIR`)               |
+| **Config**        | `src/config/index.ts`              | Paths globais resolvidos (`LOGS_DIR`, `OUTPUT_DIR`)               |
 
 ---
 

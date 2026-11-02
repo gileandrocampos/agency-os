@@ -2,8 +2,8 @@
 > Este módulo orquestra a sessão de crawl do site, valida a URL, cria a pasta de saída e produz os artefatos de renderização e análise.
 > Entradas: URL do site e configurações globais do processo.
 > Saídas: screenshots, `page.html`, `site.json` e logs em `output/<domain>_<timestamp>/`.
-> Dependências: `src/crawler/**`, `src/config.ts`, `src/filesystem/**`, `src/logger/**`, `src/utils/**`, `src/types/**`.
-> Código: `src/crawler/**`, `src/filesystem/**`, `src/logger/**`, `src/config.ts`, `src/types/**`, `src/utils/**`.
+> Dependências: `src/crawler/**`, `src/config/`, `src/filesystem/**`, `src/logger/**`, `src/utils/**`, `src/types/**`.
+> Código: `src/crawler/**`, `src/filesystem/**`, `src/logger/**`, `src/config/`, `src/types/**`, `src/utils/**`.
 
 # Crawler
 
