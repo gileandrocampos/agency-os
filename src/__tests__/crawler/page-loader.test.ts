@@ -41,4 +41,14 @@ describe('loadPage', () => {
     page.goto.mockRejectedValue(new Error('timeout'));
     await expect(loadPage(page as Page, 'https://example.com')).rejects.toThrow('timeout');
   });
+
+  it('executa delay antes de navegar quando callback é fornecido', async () => {
+    const page = makeMockPage();
+    const beforeNavigationDelay = vi.fn().mockResolvedValue(450);
+
+    await loadPage(page as Page, 'https://example.com', beforeNavigationDelay);
+
+    expect(beforeNavigationDelay).toHaveBeenCalledOnce();
+    expect(page.goto).toHaveBeenCalledOnce();
+  });
 });

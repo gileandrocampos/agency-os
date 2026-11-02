@@ -1,5 +1,5 @@
 > **Resumo**
-> Este subarquivo concentra o núcleo de execução do crawler: criação da sessão Playwright, carregamento da página, captura de artefatos e HTML renderizado.
+> Este subarquivo concentra o núcleo de execução do crawler: criação da sessão Patchright, carregamento da página, captura de artefatos e HTML renderizado.
 > É o ponto de leitura principal para a etapa inicial do pipeline antes do orquestrador e da infraestrutura de apoio.
 > Código: `src/crawler/browser.ts`, `src/crawler/page-loader.ts`, `src/crawler/screenshot.ts`, `src/crawler/html-saver.ts`.
 
@@ -7,13 +7,15 @@
 
 Documentação dos módulos que compõem o núcleo de execução do crawler, exceto o `page-preparer` (documentado em [../page-preparation/README.md](../page-preparation/README.md)).
 
+Inclui também a camada anti-bot baseada em `Patchright`, rotação de fingerprint por sessão, delay humanizado e detecção de challenge.
+
 ---
 
 ## `browser.ts`
 
 Arquivo: `src/crawler/browser.ts`
 
-Cria e gerencia a sessão Playwright (browser + context + page). Encapsula o ciclo de vida do browser para que o orquestrador não precise conhecer os detalhes de `BrowserContext`.
+Cria e gerencia a sessão de browser (Patchright + contexto + página). Encapsula o ciclo de vida para que o orquestrador não precise conhecer detalhes de criação de contexto.
 
 ### Interface `BrowserSession`
 
@@ -24,9 +26,15 @@ Cria e gerencia a sessão Playwright (browser + context + page). Encapsula o cic
 
 **Ordem de fechamento:** `context.close()` → `browser.close()`. O context deve fechar primeiro para garantir que todos os handlers de rede sejam encerrados antes do processo do browser.
 
-### `createBrowserSession(): Promise<BrowserSession>`
+### `createBrowserSession(config): Promise<BrowserSession>`
 
-Lança o Chromium em modo headless, cria um novo contexto e uma nova página. Retorna um `BrowserSession`.
+Lança o Chromium com opções de `headless` e `slowMo`, cria contexto e página, e aplica fingerprint de sessão quando habilitado:
+
+- `userAgent`
+- `viewport`
+- `locale`
+- `Accept-Language` e outros headers
+- `isMobile`, `hasTouch` e `deviceScaleFactor`
 
 ---
 
@@ -34,7 +42,7 @@ Lança o Chromium em modo headless, cria um novo contexto e uma nova página. Re
 
 Arquivo: `src/crawler/page-loader.ts`
 
-### `loadPage(page: Page, url: string): Promise<void>`
+### `loadPage(page: Page, url: string, beforeNavigationDelay?): Promise<void>`
 
 Navega para a URL usando `page.goto()` com:
 
@@ -42,6 +50,8 @@ Navega para a URL usando `page.goto()` com:
 |--------------|----------------|----------------------------------------------------|
 | `waitUntil`  | `networkidle`  | Aguarda até que não haja requisições de rede ativas |
 | `timeout`    | `30000` ms     | Evita travar indefinidamente em sites lentos        |
+
+Quando configurado, executa um delay humanizado antes de navegar.
 
 ---
 
@@ -79,4 +89,3 @@ Arquivo: `src/crawler/html-saver.ts`
 Obtém o HTML renderizado via `page.content()` e grava em `{outputDir}/page.html`. Retorna o caminho do arquivo.
 
 > `page.content()` retorna o HTML pós-execução de JavaScript, refletindo o estado real do DOM após toda a preparação.
-

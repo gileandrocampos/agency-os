@@ -9,7 +9,7 @@ Arquivo: `src/crawler/index.ts`
 
 Ponto central que combina todas as camadas em um fluxo coeso.
 
-### `runCrawler(rawUrl: string): Promise<CrawlerResult>`
+### `runCrawler(rawUrl: string): Promise<CrawlerResult | null>`
 
 Função pública exportada. Executada pela CLI.
 
@@ -22,18 +22,34 @@ Função pública exportada. Executada pela CLI.
 4. executeCrawl(config)
      a. createBrowserSession()
      b. loadPage(session.page, config.url)
-     c. PagePreparationService.prepare(page)
-     d. captureScreenshot(desktop)
-     e. captureScreenshot(mobile)
-     f. saveHtml()
-     g. extractMetadata()
-     h. parseSite()
-     i. buildSiteManifest()
-     j. saveSiteManifest() → site.json
-     k. session.close()  [sempre, via finally]
+     c. detectChallenge(session.page)
+        - se detectar, registra métricas de bloqueio e encerra com `null`
+     d. PagePreparationService.prepare(page)
+     e. captureScreenshot(desktop)
+     f. captureScreenshot(mobile)
+     g. saveHtml()
+     h. extractMetadata()
+     i. parseSite()
+     j. buildSiteManifest()
+     k. saveSiteManifest() → site.json
+     l. session.close()  [sempre, via finally]
 5. logSuccess
-6. return CrawlerResult
+6. return CrawlerResult (ou `null` se challenge for detectado)
 ```
+
+### Fluxo Anti-Bot
+
+Configuração em `config.json` (`browser.antiBot`):
+
+- `enabled`: ativa a camada anti-bot
+- `stealth`: controla a aplicação de fingerprint
+- `rotateFingerprint`: seleciona um fingerprint por sessão
+- `fingerprints`: perfis de navegador com user agent, viewport, plataforma e locale
+- `humanizedDelay`: intervalo aleatório antes da navegação e de ações de preparação
+- `challengeDetection`: padrões usados para identificar bloqueios ou CAPTCHA
+- `blockMetrics`: persistência de tentativas e bloqueios por domínio
+
+As métricas por domínio são persistidas em `logs/block-metrics.json` (ou no arquivo configurado), com tentativas, bloqueios, timestamps e tipo do challenge.
 
 ### `CrawlerResult`
 

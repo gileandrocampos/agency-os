@@ -44,4 +44,13 @@ describe('ScrollActivator', () => {
     expect(result.success).toBe(false);
     expect(result.detail).toContain('evaluate fail');
   });
+
+  it('executa callback de delay antes de cada passo de scroll', async () => {
+    const beforeScrollDelay = vi.fn().mockResolvedValue(350);
+    const activator = new ScrollActivator(0, 2, beforeScrollDelay);
+
+    await activator.run(makePageMock(1000, 500));
+
+    expect(beforeScrollDelay).toHaveBeenCalledTimes(2);
+  });
 });

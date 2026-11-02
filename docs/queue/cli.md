@@ -39,6 +39,6 @@ npm run safe-queue
 ```
 markFailed(id, msg)
   └─ attempts + 1 < max_attempts?
-       ├─ sim → status = 'pending'   (será reprocessado no próximo queue:run)
+       ├─ sim → status = 'pending'   (pode ser reprocessado na execução atual ou no próximo queue:run)
        └─ não → status = 'failed'    (encerrado com erro)
 ```
