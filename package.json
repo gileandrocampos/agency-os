@@ -13,6 +13,7 @@
     "crawl": "tsx src/cli/index.ts crawl",
     "queue": "tsx src/cli/index.ts",
     "safe-queue": "npm test && npm run queue -- queue:run",
+    "check:context": "node scripts/check-context.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
