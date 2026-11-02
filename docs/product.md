@@ -1,5 +1,12 @@
 # Agency OS
 
+> **Resumo**
+> Descreve o objetivo do produto, forma de uso e escopo funcional atual/futuro da ferramenta.
+> Entradas: URL de site e comandos de execucao via CLI.
+> Saidas: artefatos de analise em `output/<domain>_<timestamp>/`.
+> Dependencias: CLI, crawler e fila.
+> Codigo: `src/cli/**`, `src/application/**`, `src/crawler/**`, `src/queue/**`.
+
 Ferramenta local de linha de comando para automatizar análises de websites.
 
 ---

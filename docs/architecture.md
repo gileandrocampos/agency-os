@@ -1,5 +1,12 @@
 # Arquitetura
 
+> **Resumo**
+> Visao transversal do fluxo de execucao, das camadas e das responsabilidades do sistema.
+> Entradas: URL e parametros vindos da CLI.
+> Saidas: execucao de crawl, extracao e consolidacao de artefatos por sessao.
+> Dependencias: `src/cli/`, `src/application/`, `src/crawler/`, `src/parser/`, `src/manifest-builder/`, `src/filesystem/`, `src/logger/`, `src/utils/`, `src/types/`, `src/config/`.
+> Codigo: `src/**`.
+
 ## Visão geral do fluxo
 
 ```

@@ -41,4 +41,4 @@
 - Chaves não previstas só são rejeitadas quando um nó do schema usar `additionalProperties: false`.
 - `validateUrl` rejeita protocolos fora de `http`/`https` e strings que não formam URL válida.
 - `extractDomain` remove apenas prefixo `www.`; outros subdomínios são preservados.
-- `initLogger` apenas define o caminho do log; criação de diretório/arquivo fica A CONFIRMAR no fluxo de bootstrap externo.
+- `initLogger` apenas define o caminho do log; o diretório é criado antes via `ensureDir(config.logsDir)` no setup do crawler e o arquivo `execution.log` é criado no primeiro `appendFileSync`.

@@ -1,5 +1,12 @@
 # ContactExtractor
 
+> **Resumo**
+> Define o contrato e as regras de extracao de dados de contato sobre o HTML renderizado.
+> Entradas: HTML da pagina e recursos/links ja presentes no DOM.
+> Saidas: estrutura tipada com canais de contato identificados, sem IA e sem escrita em disco.
+> Dependencias: parseadores de links/texto e tipos do modulo.
+> Codigo: `src/contact-extractor/**`.
+
 ## Objetivo
 
 Extrair dados de contato disponíveis na página renderizada sem dependência de IA e sem escrita em disco.

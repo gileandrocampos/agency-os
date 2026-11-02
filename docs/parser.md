@@ -1,5 +1,12 @@
 # Parser
 
+> **Resumo**
+> Camada de parsing que transforma HTML renderizado em estrutura de dados tipada da pagina.
+> Entradas: HTML renderizado e URL base da pagina.
+> Saidas: `ParsedSite` e `SiteMetadata` para consumo de modulos de consolidacao.
+> Dependencias: extractors puros e navigation extractor.
+> Codigo: `src/parser/**`.
+
 ## Responsabilidade
 
 Receber o HTML renderizado e produzir um objeto estruturado com os dados básicos da página.

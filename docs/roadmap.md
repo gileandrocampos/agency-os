@@ -1,5 +1,12 @@
 # Roadmap
 
+> **Resumo**
+> Planejamento evolutivo por versao do produto, com entregas concluidas e proximas etapas.
+> Entradas: estado atual dos modulos e prioridades de produto.
+> Saidas: backlog versionado e direcao tecnica por ciclo.
+> Dependencias: capacidades atuais de CLI, crawler, parser, queue e output.
+> Codigo: `src/**`.
+
 ## v0.1.0 — Núcleo de crawl (atual)
 
 - [x] CLI com validação de URL

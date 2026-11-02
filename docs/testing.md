@@ -40,4 +40,4 @@
 - Testes de fila cobrem duplicidade de URL, prioridade, retries e recuperação de jobs `running`.
 - Testes utilitários cobrem entradas inválidas (ex.: protocolo não suportado em URL).
 - Spies não restaurados podem vazar estado entre casos; por regra, restaurar em `afterEach`.
-- A configuração exclui alguns arquivos da cobertura (`src/cli/index.ts`, por exemplo); impacto por módulo deve ser A CONFIRMAR quando novas exclusões forem propostas.
+- A configuração exclui alguns arquivos da cobertura (`src/cli/index.ts`, por exemplo); qualquer nova exclusão deve vir acompanhada de justificativa e revisão explícita do impacto por módulo no relatório de cobertura.
