@@ -5,7 +5,7 @@
 
 # Módulos do Crawler
 
-Documentação dos módulos que compõem o núcleo de execução do crawler, exceto o `page-preparer` (documentado em [page-preparation.md](page-preparation.md)).
+Documentação dos módulos que compõem o núcleo de execução do crawler, exceto o `page-preparer` (documentado em [../page-preparation/README.md](../page-preparation/README.md)).
 
 ---
 

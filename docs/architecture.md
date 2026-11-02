@@ -76,6 +76,6 @@ Logs (logs/execution.log)
 
 ## Tipos compartilhados
 
-Ver `src/types/index.ts` e `src/types/preparation.ts`. Documentação completa em [page-preparation.md](page-preparation.md).
+Ver `src/types/index.ts` e `src/types/preparation.ts`. Documentação completa em [page-preparation/README.md](page-preparation/README.md).
 
 O `site.json` é produzido pelo ManifestBuilder e passa a ser o contrato principal de dados para auditorias, geradores e integrações futuras.
